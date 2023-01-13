@@ -1,0 +1,50 @@
+package com.tp.qwestlsog19.dlform;
+import java.util.*;
+import com.synchronoss.ruleserver.core.xpath.XOMContainerBean;
+import com.synchronoss.ruleserver.core.xpath.XOMAccessBean;
+import com.synchronoss.brms.dresclasses.xpath.XPathProcessor;
+import com.synchronoss.brms.dresclasses.xpath.Occurence;
+import com.synchronoss.brms.dresclasses.Populated;
+import com.synchronoss.brms.dresclasses.Equals;
+import com.synchronoss.brms.dresclasses.Contains;
+import com.synchronoss.brms.dresclasses.DatatypeCheck;
+import com.synchronoss.brms.dresclasses.SpaceCheck;
+import com.synchronoss.brms.dresclasses.LengthCheck;
+import com.synchronoss.brms.dresclasses.Position;
+import com.synchronoss.brms.dresclasses.TNFormat;
+import com.synchronoss.brms.dresclasses.RangeOfValues;
+import com.synchronoss.brms.dresclasses.DateCheck;
+import com.synchronoss.brms.dresclasses.Prohibited;
+import com.synchronoss.brms.dresclasses.DateFormatCheck;
+import com.synchronoss.brms.dresclasses.Required;
+import com.synchronoss.brms.dresclasses.CapitalLetterCheck;
+import com.synchronoss.brms.dresclasses.TimeFormatCheck;
+import com.synchronoss.brms.dresclasses.SpecialFormat;
+import com.synchronoss.brms.dresclasses.dao.SupplementOrderCheck;
+import com.synchronoss.brms.dresclasses.dao.HolidayCheck;
+
+rule "QWESTDL_084_3" dialect "mvel" ruleflow-group "DLFORM"
+
+when
+		xcb object
+ 	 Evaluate 
+Start Brace
+ the field_tag "/LSR_ORD_REQ/DL" is exists
+		
+AND
+ the "/LSR_ORD_REQ/DL/DELIVERY_ADDR_INFO/DIRECTORY_DELIV_GRP/DDANO" is not populated
+        
+AND
+ 
+Start Brace
+the "/LSR_ORD_REQ/DL/DELIVERY_ADDR_INFO/DIRECTORY_DELIV_GRP/DDAPR" is not populated
+        
+AND
+ the "/LSR_ORD_REQ/DL/DELIVERY_ADDR_INFO/DIRECTORY_DELIV_GRP/DDASF" is populated
+End Brace
+
+End Brace
+
+ 	 then
+ 	 	 the error code "QWESTDL460" with message "DDANO IS REQUIRED WHEN DDAPR OR DDASF ARE POPULATED" for the field "/lsr_ord_req/dl/delivery_addr_info/directory_deliv_grp/ddano"
+end

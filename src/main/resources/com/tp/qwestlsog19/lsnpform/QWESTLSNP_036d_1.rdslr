@@ -1,0 +1,43 @@
+package com.tp.qwestlsog19.lsnpform;
+import java.util.*;
+import com.synchronoss.ruleserver.core.xpath.XOMContainerBean;
+import com.synchronoss.ruleserver.core.xpath.XOMAccessBean;
+import com.synchronoss.brms.dresclasses.xpath.XPathProcessor;
+import com.synchronoss.brms.dresclasses.xpath.Occurence;
+import com.synchronoss.brms.dresclasses.Populated;
+import com.synchronoss.brms.dresclasses.Equals;
+import com.synchronoss.brms.dresclasses.Contains;
+import com.synchronoss.brms.dresclasses.DatatypeCheck;
+import com.synchronoss.brms.dresclasses.SpaceCheck;
+import com.synchronoss.brms.dresclasses.LengthCheck;
+import com.synchronoss.brms.dresclasses.Position;
+import com.synchronoss.brms.dresclasses.TNFormat;
+import com.synchronoss.brms.dresclasses.RangeOfValues;
+import com.synchronoss.brms.dresclasses.DateCheck;
+import com.synchronoss.brms.dresclasses.Prohibited;
+import com.synchronoss.brms.dresclasses.DateFormatCheck;
+import com.synchronoss.brms.dresclasses.Required;
+import com.synchronoss.brms.dresclasses.CapitalLetterCheck;
+import com.synchronoss.brms.dresclasses.TimeFormatCheck;
+import com.synchronoss.brms.dresclasses.SpecialFormat;
+import com.synchronoss.brms.dresclasses.dao.SupplementOrderCheck;
+import com.synchronoss.brms.dresclasses.dao.HolidayCheck;
+
+rule "QWESTLSNP_036d_1" dialect "mvel" ruleflow-group "LSNPFORM"
+
+when
+		xcb object
+ 	 Evaluate 
+Start Brace
+ the field_tag "/LSR_ORD_REQ/LSNP" is exists
+		 
+AND
+ Rule "QWESTLSNP_036d_1" multiple times "CABCONNTYP" in "/LSR_ORD_REQ/LSNP/LSNP_SVC_DET[i]/SVC_INFO/FACILITY_CONFIG_GRP/CABLE_CONN_GRP[i]" is_not populated
+        
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/AUTHORIZATION/TOS" is equal to values "1P,2P,3P"
+End Brace
+
+ 	 then
+ 	 	 the rule "QWESTLSNP_036d_1" with error code "QWESTLSNP025" with message "CABCONNTYP IS REQUIRED WHEN TOS = 1P OR 2P OR 3P" for the field "cabconntyp"  of section "/lsr_ord_req/lsnp/lsnp_svc_det[i]/svc_info/facility_config_grp/cable_conn_grp[i]"
+end

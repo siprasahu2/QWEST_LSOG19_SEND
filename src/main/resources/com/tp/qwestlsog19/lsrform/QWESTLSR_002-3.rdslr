@@ -1,0 +1,46 @@
+package com.tp.qwestlsog19.lsrform;
+import java.util.*;
+import com.synchronoss.ruleserver.core.xpath.XOMContainerBean;
+import com.synchronoss.ruleserver.core.xpath.XOMAccessBean;
+import com.synchronoss.brms.dresclasses.xpath.XPathProcessor;
+import com.synchronoss.brms.dresclasses.xpath.Occurence;
+import com.synchronoss.brms.dresclasses.Populated;
+import com.synchronoss.brms.dresclasses.Equals;
+import com.synchronoss.brms.dresclasses.Contains;
+import com.synchronoss.brms.dresclasses.DatatypeCheck;
+import com.synchronoss.brms.dresclasses.SpaceCheck;
+import com.synchronoss.brms.dresclasses.LengthCheck;
+import com.synchronoss.brms.dresclasses.Position;
+import com.synchronoss.brms.dresclasses.TNFormat;
+import com.synchronoss.brms.dresclasses.RangeOfValues;
+import com.synchronoss.brms.dresclasses.DateCheck;
+import com.synchronoss.brms.dresclasses.Prohibited;
+import com.synchronoss.brms.dresclasses.DateFormatCheck;
+import com.synchronoss.brms.dresclasses.Required;
+import com.synchronoss.brms.dresclasses.CapitalLetterCheck;
+import com.synchronoss.brms.dresclasses.TimeFormatCheck;
+import com.synchronoss.brms.dresclasses.SpecialFormat;
+import com.synchronoss.brms.dresclasses.dao.SupplementOrderCheck;
+import com.synchronoss.brms.dresclasses.dao.HolidayCheck;
+
+rule "QWESTLSR_002-3" dialect "mvel" ruleflow-group "LSRFORM"
+
+when
+		xcb object
+ 	 Evaluate 
+Start Brace
+ the "/LSR_ORD_REQ/HDR/PON" is populated
+        
+AND
+ it is not true that_the "/LSR_ORD_REQ/HDR/PON" is AlphaNumeric_with following Special Character set "-"
+        
+AND
+ it is not true that_the "/LSR_ORD_REQ/HDR/PON" is AlphaNumeric 
+        
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/REQTYP" is not equal to values "JB,CB"
+End Brace
+
+ 	 then
+ 	 	 the error code "QWESTLSR007" with message "ONLY SPECIAL CHARACTER ALLOWED IN PON IS HYPHEN WHEN REQTYP IS NOT JB OR CB"  for the field "/lsr_ord_req/hdr/pon"
+end

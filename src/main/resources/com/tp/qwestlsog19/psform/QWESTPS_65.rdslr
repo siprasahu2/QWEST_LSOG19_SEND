@@ -1,0 +1,47 @@
+package com.tp.qwestlsog19.psform;
+import java.util.*;
+import com.synchronoss.ruleserver.core.xpath.XOMContainerBean;
+import com.synchronoss.ruleserver.core.xpath.XOMAccessBean;
+import com.synchronoss.brms.dresclasses.xpath.XPathProcessor;
+import com.synchronoss.brms.dresclasses.xpath.Occurence;
+import com.synchronoss.brms.dresclasses.Populated;
+import com.synchronoss.brms.dresclasses.Equals;
+import com.synchronoss.brms.dresclasses.Contains;
+import com.synchronoss.brms.dresclasses.DatatypeCheck;
+import com.synchronoss.brms.dresclasses.SpaceCheck;
+import com.synchronoss.brms.dresclasses.LengthCheck;
+import com.synchronoss.brms.dresclasses.Position;
+import com.synchronoss.brms.dresclasses.TNFormat;
+import com.synchronoss.brms.dresclasses.RangeOfValues;
+import com.synchronoss.brms.dresclasses.DateCheck;
+import com.synchronoss.brms.dresclasses.Prohibited;
+import com.synchronoss.brms.dresclasses.DateFormatCheck;
+import com.synchronoss.brms.dresclasses.Required;
+import com.synchronoss.brms.dresclasses.CapitalLetterCheck;
+import com.synchronoss.brms.dresclasses.TimeFormatCheck;
+import com.synchronoss.brms.dresclasses.SpecialFormat;
+import com.synchronoss.brms.dresclasses.dao.SupplementOrderCheck;
+import com.synchronoss.brms.dresclasses.dao.HolidayCheck;
+
+rule "QWESTPS_65" dialect "mvel" ruleflow-group "PSFORM"
+
+when
+		xcb object
+		Evaluate 
+Start Brace
+ the field_tag "/LSR_ORD_REQ/PS" is exists
+		 
+AND
+ Rule "QWESTPS_65" multiple times "FA" in "/LSR_ORD_REQ/PS/PS_SVC_DET[i]/FEATURE_GRP[i]" is_not populated
+		 
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/ACT" is equal to values "V,Z"
+		 
+AND
+ Rule "QWESTPS_65" multiple times "SVC_DET_GRP/LNA" in "/LSR_ORD_REQ/PS/PS_SVC_DET[i]" is equal to "V,N,D"
+End Brace
+
+		 
+	then
+		 the rule "QWESTPS_65" with error code "QWESTPS065" with message "FA IS REQUIRED" for the field "fa" of section "/lsr_ord_req/ps/ps_svc_det[i]/feature_grp[i]"
+end

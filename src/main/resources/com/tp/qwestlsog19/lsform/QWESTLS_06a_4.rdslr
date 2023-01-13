@@ -1,0 +1,83 @@
+package com.tp.qwestlsog19.lsform;
+import java.util.*;
+import com.synchronoss.ruleserver.core.xpath.XOMContainerBean;
+import com.synchronoss.ruleserver.core.xpath.XOMAccessBean;
+import com.synchronoss.brms.dresclasses.xpath.XPathProcessor;
+import com.synchronoss.brms.dresclasses.xpath.Occurence;
+import com.synchronoss.brms.dresclasses.Populated;
+import com.synchronoss.brms.dresclasses.Equals;
+import com.synchronoss.brms.dresclasses.Contains;
+import com.synchronoss.brms.dresclasses.DatatypeCheck;
+import com.synchronoss.brms.dresclasses.SpaceCheck;
+import com.synchronoss.brms.dresclasses.LengthCheck;
+import com.synchronoss.brms.dresclasses.Position;
+import com.synchronoss.brms.dresclasses.TNFormat;
+import com.synchronoss.brms.dresclasses.RangeOfValues;
+import com.synchronoss.brms.dresclasses.DateCheck;
+import com.synchronoss.brms.dresclasses.Prohibited;
+import com.synchronoss.brms.dresclasses.DateFormatCheck;
+import com.synchronoss.brms.dresclasses.Required;
+import com.synchronoss.brms.dresclasses.CapitalLetterCheck;
+import com.synchronoss.brms.dresclasses.TimeFormatCheck;
+import com.synchronoss.brms.dresclasses.SpecialFormat;
+import com.synchronoss.brms.dresclasses.dao.SupplementOrderCheck;
+import com.synchronoss.brms.dresclasses.dao.HolidayCheck;
+
+rule "QWESTLS_06a_4" dialect "mvel" ruleflow-group "LSFORM"
+
+when
+		xcb object
+ 	 Evaluate 
+Start Brace
+ the field_tag "/LSR_ORD_REQ/LS" is exists
+		 
+AND
+ Rule "QWESTLS_06a_4" multiple times "SLTN" in "/LSR_ORD_REQ/LS/LS_SVC_DET[i]" is populated
+        
+AND
+ 
+Start Brace
+Rule "QWESTLS_06a_4" multiple times_length of "SLTN" in "/LSR_ORD_REQ/LS/LS_SVC_DET[i]" is "12"
+				
+AND
+ Rule "QWESTLS_06a_4" multiple times_the "1" position of "SLTN" in "/LSR_ORD_REQ/LS/LS_SVC_DET[i]" is equal to values "0"
+				
+AND
+ Rule "QWESTLS_06a_4" multiple times_the "2" position of "SLTN" in "/LSR_ORD_REQ/LS/LS_SVC_DET[i]" is equal to values "0"
+				
+AND
+ Rule "QWESTLS_06a_4" multiple times_the "3" position of "SLTN" in "/LSR_ORD_REQ/LS/LS_SVC_DET[i]" is equal to values "0"
+                
+AND
+ Rule "QWESTLS_06a_4" multiple times_the "4" position of "SLTN" in "/LSR_ORD_REQ/LS/LS_SVC_DET[i]" is equal to values "-"
+				
+AND
+ Rule "QWESTLS_06a_4" multiple times_the "5" position of "SLTN" in "/LSR_ORD_REQ/LS/LS_SVC_DET[i]" is equal to values "0"
+				
+AND
+ Rule "QWESTLS_06a_4" multiple times_the "6" position of "SLTN" in "/LSR_ORD_REQ/LS/LS_SVC_DET[i]" is equal to values "0"
+				
+AND
+ Rule "QWESTLS_06a_4" multiple times_the "7" position of "SLTN" in "/LSR_ORD_REQ/LS/LS_SVC_DET[i]" is equal to values "0"
+                
+AND
+ Rule "QWESTLS_06a_4" multiple times_the "8" position of "SLTN" in "/LSR_ORD_REQ/LS/LS_SVC_DET[i]" is equal to values "-"
+				
+AND
+ Rule "QWESTLS_06a_4" multiple times_the "9" position of "SLTN" in "/LSR_ORD_REQ/LS/LS_SVC_DET[i]" is equal to values "0"
+				
+AND
+ Rule "QWESTLS_06a_4" multiple times_the "10" position of "SLTN" in "/LSR_ORD_REQ/LS/LS_SVC_DET[i]" is equal to values "0"
+				
+AND
+ Rule "QWESTLS_06a_4" multiple times_the "11" position of "SLTN" in "/LSR_ORD_REQ/LS/LS_SVC_DET[i]" is equal to values "0"	
+				
+AND
+ Rule "QWESTLS_06a_4" multiple times_the "12" position of "SLTN" in "/LSR_ORD_REQ/LS/LS_SVC_DET[i]" is equal to values "0"
+End Brace
+
+End Brace
+
+ 	 then
+ 	 	 the rule "QWESTLS_06a_4" with error code "QWESTLS117" with message "LINE SHARED TN CANNOT BE PLACEHOLDER VALUE OF 000-000-0000" for the field "sltn" of section "/lsr_ord_req/ls/ls_svc_det[i]"
+end

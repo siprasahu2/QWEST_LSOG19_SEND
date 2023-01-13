@@ -1,0 +1,46 @@
+package com.tp.qwestlsog19.npform;
+import java.util.*;
+import com.synchronoss.ruleserver.core.xpath.XOMContainerBean;
+import com.synchronoss.ruleserver.core.xpath.XOMAccessBean;
+import com.synchronoss.brms.dresclasses.xpath.XPathProcessor;
+import com.synchronoss.brms.dresclasses.xpath.Occurence;
+import com.synchronoss.brms.dresclasses.Populated;
+import com.synchronoss.brms.dresclasses.Equals;
+import com.synchronoss.brms.dresclasses.Contains;
+import com.synchronoss.brms.dresclasses.DatatypeCheck;
+import com.synchronoss.brms.dresclasses.SpaceCheck;
+import com.synchronoss.brms.dresclasses.LengthCheck;
+import com.synchronoss.brms.dresclasses.Position;
+import com.synchronoss.brms.dresclasses.TNFormat;
+import com.synchronoss.brms.dresclasses.RangeOfValues;
+import com.synchronoss.brms.dresclasses.DateCheck;
+import com.synchronoss.brms.dresclasses.Prohibited;
+import com.synchronoss.brms.dresclasses.DateFormatCheck;
+import com.synchronoss.brms.dresclasses.Required;
+import com.synchronoss.brms.dresclasses.CapitalLetterCheck;
+import com.synchronoss.brms.dresclasses.TimeFormatCheck;
+import com.synchronoss.brms.dresclasses.SpecialFormat;
+import com.synchronoss.brms.dresclasses.dao.SupplementOrderCheck;
+import com.synchronoss.brms.dresclasses.dao.HolidayCheck;
+
+rule "QWESTNP_027_1" dialect "mvel" ruleflow-group "NPFORM"
+
+when
+		xcb object
+ 	 Evaluate 
+Start Brace
+ the field_tag "/LSR_ORD_REQ/NP" is exists
+		 
+AND
+ Rule "QWESTNP_027_1" multiple times "TRANSFER_OF_CALLS_GRP/TC_TO_PRI" in "/LSR_ORD_REQ/NP/NP_SVC_DET[i]" is_not populated
+        
+AND
+ Rule "QWESTNP_027_1" multiple times "TRANSFER_OF_CALLS_GRP/TC_OPT" in "/LSR_ORD_REQ/NP/NP_SVC_DET[i]" is equal to "S,T"
+        
+AND
+ Rule "QWESTNP_027_1" multiple times_length of "PORTED_NBR" in "/LSR_ORD_REQ/NP/NP_SVC_DET[i]" is "12"
+End Brace
+
+ 	 then
+ 	 	 the rule "QWESTNP_027_1" with error code "QWESTNP027" with message "TC TO PRI IS REQUIRED WHEN TC OPT = S, T AND PORTED NUMBER FIELD LENGTH IS 12 " for the field "transfer_of_calls_grp/tc_to_pri" of section "/lsr_ord_req/np/np_svc_det[i]"
+end

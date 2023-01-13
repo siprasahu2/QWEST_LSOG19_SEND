@@ -1,0 +1,43 @@
+package com.tp.qwestlsog19.dlform;
+import java.util.*;
+import com.synchronoss.ruleserver.core.xpath.XOMContainerBean;
+import com.synchronoss.ruleserver.core.xpath.XOMAccessBean;
+import com.synchronoss.brms.dresclasses.xpath.XPathProcessor;
+import com.synchronoss.brms.dresclasses.xpath.Occurence;
+import com.synchronoss.brms.dresclasses.Populated;
+import com.synchronoss.brms.dresclasses.Equals;
+import com.synchronoss.brms.dresclasses.Contains;
+import com.synchronoss.brms.dresclasses.DatatypeCheck;
+import com.synchronoss.brms.dresclasses.SpaceCheck;
+import com.synchronoss.brms.dresclasses.LengthCheck;
+import com.synchronoss.brms.dresclasses.Position;
+import com.synchronoss.brms.dresclasses.TNFormat;
+import com.synchronoss.brms.dresclasses.RangeOfValues;
+import com.synchronoss.brms.dresclasses.DateCheck;
+import com.synchronoss.brms.dresclasses.Prohibited;
+import com.synchronoss.brms.dresclasses.DateFormatCheck;
+import com.synchronoss.brms.dresclasses.Required;
+import com.synchronoss.brms.dresclasses.CapitalLetterCheck;
+import com.synchronoss.brms.dresclasses.TimeFormatCheck;
+import com.synchronoss.brms.dresclasses.SpecialFormat;
+import com.synchronoss.brms.dresclasses.dao.SupplementOrderCheck;
+import com.synchronoss.brms.dresclasses.dao.HolidayCheck;
+
+rule "QWESTDL_040_3_2" dialect "mvel" ruleflow-group "DLFORM"
+
+when
+		xcb object
+ 	 Evaluate 
+Start Brace
+ the field_tag "/LSR_ORD_REQ/DL" is exists
+		 
+AND
+ there is no "/LSR_ORD_REQ/DL/LISTING_INFO/LISTING_INSTRUCTION" section
+        
+AND
+ Rule "QWESTDL_040_3_2" multiple times "LISTING_CNTRL/RTY" in "/LSR_ORD_REQ/DL/LISTING_INFO[i]" is equal to "LXL,LEM,LUL,FXL,FEM,FUL"
+End Brace
+
+ 	 then
+ 	 	 the rule "QWESTDL_040_3_2" with error code "QWESTDL257" with message "OMTN IS REQUIRED WHEN RTY = LXL, LEM, LUL, FXL, FEM, FUL" for the field "listing_instruction/omtn" of section "/lsr_ord_req/dl/listing_info[i]"
+end

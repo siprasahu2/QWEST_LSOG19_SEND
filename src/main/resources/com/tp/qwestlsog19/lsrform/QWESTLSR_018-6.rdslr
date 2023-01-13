@@ -1,0 +1,55 @@
+package com.tp.qwestlsog19.lsrform;
+import java.util.*;
+import com.synchronoss.ruleserver.core.xpath.XOMContainerBean;
+import com.synchronoss.ruleserver.core.xpath.XOMAccessBean;
+import com.synchronoss.brms.dresclasses.xpath.XPathProcessor;
+import com.synchronoss.brms.dresclasses.xpath.Occurence;
+import com.synchronoss.brms.dresclasses.Populated;
+import com.synchronoss.brms.dresclasses.Equals;
+import com.synchronoss.brms.dresclasses.Contains;
+import com.synchronoss.brms.dresclasses.DatatypeCheck;
+import com.synchronoss.brms.dresclasses.SpaceCheck;
+import com.synchronoss.brms.dresclasses.LengthCheck;
+import com.synchronoss.brms.dresclasses.Position;
+import com.synchronoss.brms.dresclasses.TNFormat;
+import com.synchronoss.brms.dresclasses.RangeOfValues;
+import com.synchronoss.brms.dresclasses.DateCheck;
+import com.synchronoss.brms.dresclasses.Prohibited;
+import com.synchronoss.brms.dresclasses.DateFormatCheck;
+import com.synchronoss.brms.dresclasses.Required;
+import com.synchronoss.brms.dresclasses.CapitalLetterCheck;
+import com.synchronoss.brms.dresclasses.TimeFormatCheck;
+import com.synchronoss.brms.dresclasses.SpecialFormat;
+import com.synchronoss.brms.dresclasses.dao.SupplementOrderCheck;
+import com.synchronoss.brms.dresclasses.dao.HolidayCheck;
+
+rule "QWESTLSR_018-6" dialect "mvel" ruleflow-group "LSRFORM"
+
+when
+		xcb object
+ 	 Evaluate 
+Start Brace
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/AUTHORIZATION/APTCONF" is populated
+        
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/AUTHORIZATION/APTCONF" equals "OVERRIDE"
+        
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/REQTYP" equals "BB"
+        
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/AUTHORIZATION/TOS" is equal to values "1,2,3"
+        
+AND
+ the length of "/LSR_ORD_REQ/LSR/LSR_ADMIN/AUTHORIZATION/TOS" is 1
+        
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/ACT" is equal to values "V,Z"
+        
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/AUTHORIZATION/CHC" equals "B"
+End Brace
+
+ 	 then
+ 	 	 the error code "QWESTLSR335" with message "APT CON VALID VALUE OF OVERRIDE IS PROHIBITED WHEN REQTYP = BB, TOS = 1OR 2 OR 3, ACT IS V or Z AND CHC IS B"  for the field "/lsr_ord_req/lsr/lsr_admin/authorization/aptconf"
+end

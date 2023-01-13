@@ -1,0 +1,5238 @@
+//created on: Nov 15, 2014
+package com.tp.qwestlsog19.hgiform;
+ import classes here.
+
+import com.synchronoss.ruleserver.core.xpath.XOMContainerBean;
+import com.synchronoss.ruleserver.core.xpath.XOMAccessBean;
+import com.synchronoss.brms.dresclasses.Populated;
+import java.util.*;
+import com.synchronoss.brms.dresclasses.Populated;
+import com.synchronoss.brms.dresclasses.Equals;
+import com.synchronoss.brms.dresclasses.Contains;
+import com.synchronoss.brms.dresclasses.DatatypeCheck;
+import com.synchronoss.brms.dresclasses.SpaceCheck;
+import com.synchronoss.brms.dresclasses.LengthCheck;
+import com.synchronoss.brms.dresclasses.Position;
+import com.synchronoss.brms.dresclasses.TNFormat;
+import com.synchronoss.brms.dresclasses.RangeOfValues;
+import com.synchronoss.brms.dresclasses.DateCheck;
+import com.synchronoss.brms.dresclasses.Prohibited;
+import com.synchronoss.brms.dresclasses.DateFormatCheck;
+import com.synchronoss.brms.dresclasses.Required;
+import com.synchronoss.brms.dresclasses.CapitalLetterCheck;
+import com.synchronoss.brms.dresclasses.TimeFormatCheck;
+import com.synchronoss.brms.dresclasses.SpecialFormat;
+import com.synchronoss.brms.dresclasses.dao.SupplementOrderCheck;
+import com.synchronoss.brms.dresclasses.xpath.Occurence;
+
+expander QwestCTL19DSL.dsl
+
+//@@@@@@@@@@@@@@@@@@@@ RuleFlow Rules @@@@@@@@@@@@@@@@@@@@@//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//@@@@@@@@ Function sets to support multiple fields rules @@@@@@@@@@@@@@@@@@@//
+
+function void logMultipleError(XOMContainerBean xcb,String ruleid, String section, String field, String errorCode, String errorMessage)
+    {
+	
+	ArrayList errorListIndex = (ArrayList) (xcb.getErrorListIndexMap()).get(ruleid);
+	if (errorListIndex != null && errorListIndex.size() > 0)
+	{
+	    for (int i = 0; i < errorListIndex.size(); i++)
+	    {
+	    if(section.contains("[i]/"))
+	    {
+	    	ArrayList temp=new ArrayList();
+	    	temp=(ArrayList)errorListIndex.get(i);
+	    	String section1=null;
+			String section2=null;
+			String section12=null;
+			int pos1,pos2;
+			pos1=section.indexOf("[i]/");
+			pos2=section.lastIndexOf("[i]");
+			section1=section.substring(0,pos1);
+			section2=section.substring(pos1+4,pos2);
+			section12=section1 + "[" + temp.get(0) + "]/" + section2;
+			String xpath = section12 + "[" + temp.get(1) + "]/" + field;
+			xcb.logError(errorCode, errorMessage, xpath);
+	    }
+	    else
+	    {
+
+	    	int pos1;
+	    	String section1=null;
+	    	pos1=section.indexOf("[i]");
+			section1=section.substring(0,pos1);
+			String xpath = section1 + "[" + errorListIndex.get(i) + "]/" + field;
+	    	xcb.logError(errorCode, errorMessage, xpath);
+	    }
+	    }
+	}
+	(xcb.getErrorListIndexMap()).remove(ruleid);
+   }
+
+  function boolean compare(XOMContainerBean xcb,int compareType, String ruleid, String section, String field, String parameter, String val2, String position1, String position2)
+    {
+    	
+    	ArrayList errorListIndex = new ArrayList();
+    	ArrayList errorListIndexTemp1 = new ArrayList();
+    	ArrayList errorListIndexTemp2 = new ArrayList();
+    	int CT=compareType;
+    	String param=parameter;
+    	boolean finalFlag = false;
+    	if(section.contains("[i]/"))
+    	{
+    		String section1=null;
+    		String section2=null;
+    		String section12=null;
+    		int pos1,pos2;
+    		pos1=section.indexOf("[i]/");
+    		pos2=section.lastIndexOf("[i]");
+    		section1=section.substring(0,pos1);
+    		section2=section.substring(pos1+4,pos2);
+    		XOMAccessBean accessBean1 = xcb.xpath(section1);
+    		XOMContainerBean[] arr1;
+    		arr1 = accessBean1.nodeSet();
+    		XOMAccessBean accessBean2 =null;
+    		for (int i = 0; i < arr1.length; i++)
+    		{
+    			section12=section1 + "[" + (i + 1) + "]/" + section2;
+    			accessBean2 = xcb.xpath(section12);
+    			XOMContainerBean[] arr2;
+    			arr2 = accessBean2.nodeSet();
+    			for(int j = 0; j < arr2.length; j++)
+    			{
+    				boolean flag = false;
+    				XOMContainerBean xBean = arr2[j];
+    				
+    				String xpath = section12 + "[" + (j + 1) + "]/" + field;
+    				String content = xBean.xpath(xpath).stringValue();
+    				
+    				flag=MultiRules(CT,xpath,content,param,val2,position1,position2);
+	    
+	    
+    				if (flag)
+    				{
+    					ArrayList temp=new ArrayList();
+    					temp.add(i+1);
+    					temp.add(j+1);
+    					errorListIndex.add(temp);
+    					finalFlag = true;
+    				}
+    			}
+    			accessBean2 =null;
+			}
+		}
+	else
+	{
+		int pos1;
+		String section1=null;
+		section1=section.replace("[i]", "");
+		XOMAccessBean accessBean = xcb.xpath(section1);
+		XOMContainerBean[] arr;
+		arr = accessBean.nodeSet();
+		for (int i = 0; i < arr.length; i++)
+		{
+		    boolean flag = false;
+		    XOMContainerBean xBean = arr[i];
+		    
+		    String xpath = section1 + "[" + (i + 1) + "]/" + field;
+		    String content = xBean.xpath(xpath).stringValue();
+		    flag=MultiRules(CT,xpath,content,param,val2,position1,position2);
+			
+		    if (flag)
+		    {
+			errorListIndex.add(i + 1);
+			finalFlag = true;
+		    }
+		}
+	}
+	
+	
+	errorListIndexTemp1=(ArrayList)((xcb.getErrorListIndexMap()).get(ruleid));
+	
+	errorListIndexTemp2=(ArrayList)errorListIndex.clone();
+	
+	if(errorListIndexTemp1!=null)
+	{
+		if(errorListIndexTemp1.isEmpty())
+		{
+			errorListIndex=(ArrayList)errorListIndexTemp1.clone();
+		}
+		else
+		{
+			ArrayList errorListIndexTemp3 = new ArrayList();
+			for(int i = 0;i < errorListIndexTemp1.size();i++){
+				for(int j = 0;j < errorListIndexTemp2.size();j++){
+					if(errorListIndexTemp1.get(i).equals(errorListIndexTemp2.get(j))){
+						errorListIndexTemp3.add(errorListIndexTemp1.get(i));
+						
+					}
+				}
+					errorListIndex=(ArrayList)errorListIndexTemp3.clone();
+			}
+		}
+	}
+	
+	if (finalFlag)
+	{
+		(xcb.getErrorListIndexMap()).put(ruleid,errorListIndex);
+	}
+	return finalFlag;
+    }
+    function boolean MultiRules(int compareType, String xpath, String content, String parameter, String val2, String position1, String position2)
+    {
+     boolean flag=false;
+     	
+     switch (compareType)
+	    {
+	    case 1:
+		if((parameter != null) && ((new Equals()).isEqualToValues(content,parameter)))
+		{
+		    // log.debug("EQUALS");
+		    flag = true;
+		}
+		break;
+	    case 2:
+		if ((parameter != null) && (!((new LengthCheck()).checkMaximumlength(content,Integer.parseInt(parameter)))))
+		{
+		    // log.debug("LENGTH IS GREATER");
+		    flag = true;
+		}
+		break;
+	    case 3:
+	    	if((parameter == null) || (!(new Equals()).isEqualToValues(content,parameter)))
+		{
+		    // log.debug("CHARACTERS DOES NOT MATCH");
+		    flag = true;
+		}
+		break;
+	    case 4:if((new Populated()).isNotPopulated(content))
+		{
+		   // log.debug("FIELD NOT POPULATED");
+		    flag = true;
+		}
+		break;
+	    case 5:
+		if ((new Populated()).isPopulated(content))
+		{
+		   // log.debug("FIELD POPULATED");
+		    flag = true;
+		}
+		break;
+	    case 6:
+		if ((parameter != null) && (!((new DatatypeCheck()).checkAlphaSPSet(content,parameter))))
+		{
+			// log.debug("FIELD IS NOT ALPHA WITH SPECIAL CHARS");
+		    flag = true;
+		}
+		break;
+	    case 7:
+		if (!((new DatatypeCheck()).checkNumeric(content)))
+		{
+		    // log.debug("FIELD IS NOT NUMERIC");
+		    flag = true;
+		}
+		break;
+	    case 8:
+		if (!((new DatatypeCheck()).checkAlphaNumeric(content)))
+		{
+			    // log.debug("FIELD IS NOT ALPHANUMERIC");
+			  flag = true;
+		}
+		break;
+	    case 9:
+			if ((parameter != null) && (!((new LengthCheck()).checkLength(content,Integer.parseInt(parameter)))))
+			{
+				    // log.debug("FIELD LENGTH CHECK");
+				  flag = true;
+			}
+			break;
+	    case 10:
+	    	if ((parameter != null) && (!((new TNFormat()).tnFormatIs(content,parameter))))
+			{
+				    // log.debug("TELEPHONE NUM FORMAT");
+				  flag = true;
+			}
+			break;
+			case 11:
+			if (!((new DatatypeCheck()).checkAlpha(content)))
+			{
+				    // log.debug("FIELD IS NOT ALPHA");
+				  flag = true;
+			}
+			break;
+			
+	    case 12:
+			if ((parameter != null) && (!((new DatatypeCheck()).checkAlphaNumericSPSet(content,parameter))))
+			{
+				// log.debug("FIELD IS ALLOW ALPHANUM WITH SPECIAL CHARS");
+			    flag = true;
+			}
+			break;
+	    case 13:
+			if ((parameter != null) && (((new LengthCheck()).checkLength(content,Integer.parseInt(parameter)))))
+			{
+				    // log.debug("FIELD LENGTH CHECK");
+				  flag = true;
+			}
+			break;
+	    case 14:
+			if ((new DatatypeCheck()).checkAlphaNumeric(content))
+			{
+				    // log.debug("FIELD IS ALPHANUMERIC");
+				  flag = true;
+			}
+			break;
+	    case 15:
+			if ((new DatatypeCheck()).checkNumeric(content))
+			{
+			    // log.debug("FIELD IS NOT NUMERIC");
+			    flag = true;
+			}
+			break;
+	    case 16:
+			if ((new DatatypeCheck()).checkAlpha(content))
+			{
+				    // log.debug("FIELD IS ALPHA");
+				  flag = true;
+			}
+			break;
+	    case 17:
+			if((parameter != null) && ((new Equals()).isGreaterThan(content,Integer.parseInt(parameter))))
+		    {
+			    // log.debug("GREATER THAN");
+			    flag = true;
+			}
+			break;
+	    case 18:
+	    	if((parameter != null) && ((new Contains()).characterNotPreceededAndFollowedByNumeric(content,parameter)))
+		    {
+			    // log.debug("NUMBERS WITH SPECIAL CHAR");
+			    flag = true;
+			}
+			break;
+	    case 19:
+	    	if((parameter != null) && ((new Contains()).contains(content,parameter)))
+		    {
+			    // log.debug("CONTAINS CHAR");
+			    flag = true;
+			}
+			break;
+	    case 20:
+	    	if((parameter != null) && (content!="") && (!((new Contains()).characterFollowedByAlpha(content,parameter))))
+		    {
+			    // log.debug("CONTAINS CHAR FOLLOWED BY ALPHA");
+			    flag = true;
+			}
+			break;
+	    case 21:
+	    	if((parameter != null)&& (content!="") && ((new Contains()).characterPreceededAndFollowedByAlpha(content,parameter)))
+		    {
+			    // log.debug("CONTAINS CHAR PRECEEDED AND FOLLOWED BY ALPHA");
+			    flag = true;
+			}
+			break;
+	    case 22:
+	    	if((parameter != null)  && (content!="") && (!((new Contains()).characterPreceededAndFollowedByAlphaNumeric(content,parameter))))
+		    {
+			    // log.debug("CONTAINS CHAR PRECEEDED AND FOLLOWED BY ALPHANUM");
+			    flag = true;
+			}
+			break;
+	    case 23:
+	    	if((parameter != null) && (content!="") && (!((new Contains()).characterFollowedBySpace(content,parameter.charAt(0)))))
+		    {
+			    // log.debug("CONTAINS CHAR FOLLOWED BY SPACE");
+			    flag = true;
+			}
+			break;
+	    case 24:
+	    	if((new Contains()).checkSingleParanthesis(content))
+		    {
+			    // log.debug("CONTAINS SINGLE (");
+			    flag = true;
+			}
+			break;
+	    case 25:
+	    	if(!((new SpaceCheck()).isAmpersandprecspace(content)))
+		    {
+			    // log.debug("CONTAINS AMPERSAND AND SPACE");
+			    flag = true;
+			}
+			break;
+	    case 26:
+	    	if((new Contains()).doubleVirgleNotPreceededAndFollowedByAlphaNumeric(content))
+		    {
+			    // log.debug("CONTAINS VIRGLE NOT ALPHANUM ");
+			    flag = true;
+			}
+			break;
+	    case 27:
+	    		if(!((new Position()).positionOftagValueEqualToValues(Integer.parseInt(position1), content, parameter)))
+	    		{
+	    			
+					flag = true;
+	    		}
+	    		break;
+		    case 28:
+				if(!((new RangeOfValues()).twoFieldPositionInRange(Integer.parseInt(position1), Integer.parseInt(position2), content, Integer.parseInt(parameter), Integer.parseInt(val2))))
+				{
+				    flag = true;
+				}
+				break;
+		    case 29:
+					
+				if((new Position()).positionOftagValueEqualToValues(Integer.parseInt(position1), content, parameter))
+				{
+				    //System.out.println("Pos:"+Integer.parseInt(position1)+"\t Content:"+content+"\tvalue:"+parameter);
+					flag = true;
+				}
+				break;
+		    case 30:
+				if(!((new Position()).twoPositionValueofTagEqualToValues(Integer.parseInt(position1), Integer.parseInt(position2), content, parameter)))
+				{
+				    flag = true;
+				}
+				break;
+		    case 31:
+				if((new Position()).posToPosOfTagIsLessThanOrEqualToPosToPos(Integer.parseInt(position1), Integer.parseInt(position2), content, Integer.parseInt(parameter), Integer.parseInt(val2)))
+				{
+				    flag = true;
+				}
+				break;
+			case 32:
+			if ((parameter != null) && (!((new DatatypeCheck()).checkAlphaNumericWithOutSPSet(content,parameter))))
+			{
+				// log.debug("FIELD IS NOT ALPHANUM WITH SPECIAL CHARS");
+			    flag = true;
+			}
+			break;
+			case 33:
+			if ((parameter != null) && (((new Position()).positionOftagValueNotEqualToValue(Integer.parseInt(position1), content,parameter))))
+			{
+				flag = true;
+			}
+			break;
+	    default:
+
+    }
+   
+ 	return flag;
+    }
+    
+   
+    
+    function boolean multiEquals(XOMContainerBean xcb, String ruleid, String section, String field, String valueToCompare) 
+    {
+	return compare(xcb, 1, ruleid, section, field, valueToCompare,null,null,null);
+    }
+
+    function boolean moMaxLength(XOMContainerBean xcb, String ruleid, String section, String field, String lenghtValue)
+    {
+	return compare(xcb, 2, ruleid, section, field, lenghtValue,null,null,null);
+    }
+
+    function boolean multiNotEquals(XOMContainerBean xcb, String ruleid, String section, String field, String valueToCompare)
+    {
+	return compare(xcb, 3, ruleid, section, field, valueToCompare,null,null,null);
+    }
+
+    function boolean moNotExists(XOMContainerBean xcb, String ruleid, String section, String field)
+    {
+	return compare(xcb, 4, ruleid, section, field, null,null,null,null);
+    }
+
+    function boolean moExists(XOMContainerBean xcb, String ruleid, String section, String field)
+    {
+	return compare(xcb, 5, ruleid, section, field, null,null,null,null);
+    }
+    
+    function boolean AlphaSpecialChar(XOMContainerBean xcb, String ruleid, String section, String field, String valueToCompare)
+    {
+	return compare(xcb, 6, ruleid, section, field, valueToCompare,null,null,null);
+    }
+    
+    function boolean isNotNumber(XOMContainerBean xcb, String ruleid, String section, String field)
+    {
+	return compare(xcb, 7, ruleid, section, field, null,null,null,null);
+    }
+    
+    function boolean isNotAlphaNumeric(XOMContainerBean xcb, String ruleid, String section, String field)
+    {
+	return compare(xcb, 8, ruleid, section, field, null,null,null,null);
+    }
+    
+    function boolean LengthNotValue(XOMContainerBean xcb, String ruleid, String section, String field, String valueToCompare)
+    {
+	return compare(xcb, 9, ruleid, section, field, valueToCompare,null,null,null);
+    }
+    
+    function boolean TelNumFormat(XOMContainerBean xcb, String ruleid, String section, String field, String valueToCompare)
+    {
+	return compare(xcb, 10, ruleid, section, field, valueToCompare,null,null,null);
+    }
+    
+    function boolean isNotAlpha(XOMContainerBean xcb, String ruleid, String section, String field)
+    {
+	return compare(xcb, 11, ruleid, section, field, null,null,null,null);
+	}
+	
+    function boolean AlphaNumNotSpecialChar(XOMContainerBean xcb, String ruleid, String section, String field, String valueToCompare)
+    {
+	return compare(xcb, 12, ruleid, section, field, valueToCompare,null,null,null);
+    }
+    
+    function boolean LengthValue(XOMContainerBean xcb, String ruleid, String section, String field, String valueToCompare)
+    {
+	return compare(xcb, 13, ruleid, section, field, valueToCompare,null,null,null);
+    }
+    
+    function boolean isAlphaNumeric(XOMContainerBean xcb, String ruleid, String section, String field)
+    {
+	return compare(xcb, 14, ruleid, section, field, null,null,null,null);
+    }
+    
+    function boolean isNumber(XOMContainerBean xcb, String ruleid, String section, String field)
+    {
+	return compare(xcb, 15, ruleid, section, field, null,null,null,null);
+    }
+    
+    function boolean isAlpha(XOMContainerBean xcb, String ruleid, String section, String field)
+    {
+	return compare(xcb, 16, ruleid, section, field, null,null,null,null);
+    }
+    
+    function boolean isGreaterThan(XOMContainerBean xcb, String ruleid, String section, String field, String valueToCompare)
+    {
+	return compare(xcb, 17, ruleid, section, field, valueToCompare,null,null,null);
+    }
+    
+    function boolean characterPreceededOrFollowedByNumeric(XOMContainerBean xcb, String ruleid, String section, String field,String valueToCompare)
+    {
+	return compare(xcb, 18, ruleid, section, field, valueToCompare,null,null,null);
+    }
+    
+    function boolean containsfun(XOMContainerBean xcb, String ruleid, String section, String field, String valueToCompare)
+    {
+	return compare(xcb, 19, ruleid, section, field, valueToCompare,null,null,null);
+    }
+    
+    function boolean characterFollowedByAlpha(XOMContainerBean xcb, String ruleid, String section, String field, String valueToCompare)
+    {
+	return compare(xcb, 20, ruleid, section, field, valueToCompare,null,null,null);
+    }
+    
+    function boolean characterPreceededAndFollowedByAlpha(XOMContainerBean xcb, String ruleid, String section, String field, String valueToCompare)
+    {
+	return compare(xcb, 21, ruleid, section, field, valueToCompare,null,null,null);
+    }
+    
+    function boolean characterPreceededAndFollowedByAlphaNumeric(XOMContainerBean xcb, String ruleid, String section, String field, String valueToCompare)
+    {
+	return compare(xcb, 22, ruleid, section, field, valueToCompare,null,null,null);
+    }
+    
+    function boolean characterFollowedBySpace(XOMContainerBean xcb, String ruleid, String section, String field,String valueToCompare)
+    {
+	return compare(xcb, 23, ruleid, section, field, valueToCompare,null,null,null);
+    }
+    
+    function boolean checkSingleParanthesis(XOMContainerBean xcb, String ruleid, String section, String field)
+    {
+	return compare(xcb, 24, ruleid, section, field, null,null,null,null);
+    }
+    
+    function boolean isAmpersandprecspace(XOMContainerBean xcb, String ruleid, String section, String field)
+    {
+	return compare(xcb, 25, ruleid, section, field, null,null,null,null);
+    }
+    
+    function boolean doubleVirgleNotPreceededAndFollowedByAlphaNumeric(XOMContainerBean xcb, String ruleid, String section, String field)
+    {
+	return compare(xcb, 26, ruleid, section, field, null,null,null,null);
+    }
+    
+    function boolean PositionValue(XOMContainerBean xcb, String ruleid, String section, String field, String pos, String valueToCompare)
+    {
+	return compare(xcb,27, ruleid, section, field, valueToCompare, null, pos, null);
+    }
+    
+    function boolean Positions1n2Values(XOMContainerBean xcb, String ruleid, String section, String field, String pos1, String pos2, String val1, String val2)
+    {
+	return compare(xcb,28, ruleid, section, field, val1, val2, pos1, pos2);
+    }
+    
+    function boolean PositionValueEqual(XOMContainerBean xcb, String ruleid, String section, String field, String pos,String valueToCompare)
+    {
+	return compare(xcb,29, ruleid, section, field,  valueToCompare, null, pos, null);
+    }
+    
+    function boolean Positions1n2Equals(XOMContainerBean xcb, String ruleid, String section, String field, String pos1, String pos2, String valueToCompare)
+    {
+	return compare(xcb,30, ruleid, section, field, valueToCompare, null, pos1, pos2);
+    }
+   
+    function boolean posToPosOfTagIsLessThanOrEqualToPosToPos(XOMContainerBean xcb, String ruleid, String section, String field, String pos1, String pos2, String pos3, String pos4)
+    {
+	return compare(xcb,31, ruleid, section, field, pos3, pos4, pos1, pos2);
+    }
+    
+	function boolean AlphaNumSpecialChar(XOMContainerBean xcb, String ruleid, String section, String field, String valueToCompare)
+    {
+	return compare(xcb, 32, ruleid, section, field, valueToCompare,null,null,null);
+    }
+    
+	function boolean multiPosNotEquals(XOMContainerBean xcb, String ruleid, String section, String field, String pos, String valueToCompare) 
+    {
+	return compare(xcb, 33, ruleid, section, field, valueToCompare,null, pos,null);
+    }
+
+//@@@@@@@@@@@@@@@@@@ Function Sets @@@@@@@@@@@@@@@@@@//
+
+
+
+function boolean countPortedNbrRangeformatvalues(XOMContainerBean xcb, String field, int totalpnum)
+{
+		try{
+		boolean flag=false;
+		String completexml=xcb.getXmlInstance();
+		Occurence occ=new Occurence(completexml);
+		flag=occ.countPortedNbrRangeformatvalues(field,totalpnum);
+		return flag;
+		}
+		catch(Exception e)
+		{ 
+	return false; 
+	}
+}
+
+function boolean FunGetResponseXMLForResponseType(XOMContainerBean xcb, String ponXpath, String ccnaXpath)
+{
+	try{
+		boolean flag=false;
+		String completexml=xcb.getXmlInstance();
+		String pon=xcb.xpath(ponXpath).stringValue();
+		String ccna=xcb.xpath(ccnaXpath).stringValue();
+		SupplementOrderCheck soc = new SupplementOrderCheck(completexml);
+		flag=soc.getResponseXMLForResponseType(pon,ccna);	
+		return flag;
+	}
+ catch(Exception e)
+{ 
+	return false; 
+	}
+}
+
+
+function boolean FunCancelOrderCheck(XOMContainerBean xcb, String ponXpath, String ccnaXpath)
+{
+		try{
+			boolean flag=false;
+			String completexml=xcb.getXmlInstance();
+			String pon=xcb.xpath(ponXpath).stringValue();
+			String ccna=xcb.xpath(ccnaXpath).stringValue();
+			SupplementOrderCheck soc = new SupplementOrderCheck(completexml);
+			flag=soc.cancelOrderCheck(pon,ccna);	
+			return flag;
+		}	
+ catch(Exception e)
+{ 
+return false; }
+}
+
+function boolean EachOccOfFieldIsEqualValues(XOMContainerBean xcb, String section, String field, String values)
+{
+		try{
+		XOMAccessBean accessBean = xcb.xpath(section);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+        int count=0;
+        for(int i = 0; i < arr.length; i++)
+        {
+        	String xpath = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field).toString();
+        	if(((new Populated()).isPopulated((xcb.xpath(xpath)).stringValue()))
+				&& ((new Equals()).isEqualToValues((xcb.xpath(xpath).stringValue()),values)))
+        	{
+        		count++;
+        	}
+        }
+        if(count > 0)
+			return true;
+	return false;
+}
+ catch(Exception e)
+{ return false; }
+}
+
+function boolean EachOccOfFieldIsNotEqualValues(XOMContainerBean xcb, String section, String field, String values)
+{
+		try{
+		XOMAccessBean accessBean = xcb.xpath(section);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+        int count=0;
+        for(int i = 0; i < arr.length; i++)
+        {
+        	String xpath = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field).toString();
+        	if(((new Populated()).isPopulated((xcb.xpath(xpath)).stringValue()))
+				&& ((new Equals()).isNotEqualToValues((xcb.xpath(xpath).stringValue()),values)))
+        	{
+        		count++;
+        	}
+        }
+        if(count > 0)
+			return true;
+	return false;
+}
+ catch(Exception e)
+{ return false; }
+}
+
+function void F1greaterThanF2(XOMContainerBean xcb, String section, String eCode, String eMsg)
+{
+		try{
+		XOMAccessBean accessBean = xcb.xpath(section);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+		String ddd=null, tcper=null;
+        for(int i = 0; i < arr.length; i++)
+        {
+        	String xpath = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append("tcper").toString();
+			tcper=xcb.xpath(xpath).stringValue();
+			ddd=xcb.xpath("/LSR_ORD_REQ/LSR/LSR_ADMIN/AUTHORIZATION/DDD").stringValue();
+			//System.out.println("tcper:"+tcper+"\nddd:"+ddd);
+			if((new Populated()).isPopulated((xcb.xpath(xpath)).stringValue()) && (!((new DateCheck()).isGreaterThanOrEqualTo(tcper,ddd))))
+        	{
+        		xcb.logError(eCode,eMsg,xpath);
+        	}
+		
+        }
+	}
+ catch(Exception e)
+{ 
+//System.out.println("Exception:F1greaterThanF2");
+ }
+
+}
+
+function boolean NumOccOfSecNotEqualCount(XOMContainerBean xcb, String section, int count)
+{
+		try{
+		XOMAccessBean accessBean = xcb.xpath(section);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+        int val=arr.length;
+        if(count != val )
+        	{
+        		return true;
+        	}
+        return false;
+}
+ catch(Exception e)
+{ return false; }
+}
+
+function void CaptionSecMoreThan6(XOMContainerBean xcb, String section, String field, String eCode, String eMsg)
+{
+		try{
+		XOMAccessBean accessBean = xcb.xpath(section);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+        for(int i = 0; i < arr.length; i++)
+        {
+        	String xpath = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field).toString();
+        	if((new Populated()).isPopulated((xcb.xpath(xpath)).stringValue()) || (xcb.xpath(xpath).booleanValue()))
+        	{
+        		xcb.logError(eCode,eMsg,xpath);
+        	}
+		
+        }
+}
+ catch(Exception e)
+	{ 
+		//System.out.println("Exception:CaptionSecMoreThan6"); 
+	}
+}
+
+
+function void FieldIFieldNotO(XOMContainerBean xcb, String section1, String section2, String field, String eCode, String eMsg)
+{
+		try{
+		XOMAccessBean accessBean = xcb.xpath(section1);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+        for(int i = 0; i < arr.length; i++)
+        {
+        	String section3 = (new StringBuilder(String.valueOf(section1))).append("[").append(i + 1).append("]/").append(section2).toString();
+        	String xpath1 = (new StringBuilder(String.valueOf(section1))).append("[").append(i + 1).append("]/").append("listingcontrolsection/ddqty").toString();
+			if((new Equals()).isEquals(((xcb.xpath(xpath1)).stringValue()),"2"))
+        	{
+				XOMAccessBean accessBean2 = xcb.xpath(section3);
+				XOMContainerBean arr2[] = accessBean2.nodeSet();
+				int count=1;
+				Stack dactO = new Stack();
+				for(int j = 1; j <= arr2.length; j++)
+				{
+					String xpath2 = (new StringBuilder(String.valueOf(section3))).append("[").append(j).append("]/").append(field).toString();
+					if((new Equals()).isEquals(((xcb.xpath(xpath2)).stringValue()),"I" ))
+					{
+						dactO.push(j);
+						count++;
+					}
+				}
+				for(int k = 0; k < arr2.length; k++)
+				{
+					String xpath2 = (new StringBuilder(String.valueOf(section3))).append("[").append(k + 1).append("]/").append(field).toString();
+					if((new Equals()).isEquals(((xcb.xpath(xpath2)).stringValue()),"O" ))
+					{
+						count--;
+					}
+				}
+				if(count>1)
+				{
+					for(int a = 1; a < count; a++)
+					{
+						String xpath3 = (new StringBuilder(String.valueOf(section3))).append("[").append(dactO.pop()).append("]/").append(field).toString();
+						xcb.logError(eCode,eMsg,xpath3);
+					}
+				}
+        	
+			}
+			
+			
+        }
+}
+ catch(Exception e)
+	{ 
+		//System.out.println("Exception:FieldIFieldNotO"); 
+	}
+}
+
+function void FieldOFieldNotI(XOMContainerBean xcb, String section1, String section2, String field, String eCode, String eMsg)
+{
+		try{
+		XOMAccessBean accessBean = xcb.xpath(section1);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+        for(int i = 0; i < arr.length; i++)
+        {
+        	String section3 = (new StringBuilder(String.valueOf(section1))).append("[").append(i + 1).append("]/").append(section2).toString();
+        	String xpath1 = (new StringBuilder(String.valueOf(section1))).append("[").append(i + 1).append("]/").append("listingcontrolsection/ddqty").toString();
+			if((new Equals()).isEquals(((xcb.xpath(xpath1)).stringValue()),"2"))
+        	{
+				XOMAccessBean accessBean2 = xcb.xpath(section3);
+				XOMContainerBean arr2[] = accessBean2.nodeSet();
+				int count=1;
+				Stack dactO = new Stack();
+				for(int j = 1; j <= arr2.length; j++)
+				{
+					String xpath2 = (new StringBuilder(String.valueOf(section3))).append("[").append(j).append("]/").append(field).toString();
+					if((new Equals()).isEquals(((xcb.xpath(xpath2)).stringValue()),"O" ))
+					{
+						dactO.push(j);
+						count++;
+					}
+				}
+				for(int k = 0; k < arr2.length; k++)
+				{
+					String xpath2 = (new StringBuilder(String.valueOf(section3))).append("[").append(k + 1).append("]/").append(field).toString();
+					if((new Equals()).isEquals(((xcb.xpath(xpath2)).stringValue()),"I" ))
+					{
+						count--;
+					}
+				}
+				if(count>1)
+				{
+					for(int a = 1; a < count; a++)
+					{
+						String xpath3 = (new StringBuilder(String.valueOf(section3))).append("[").append(dactO.pop()).append("]/").append(field).toString();
+						xcb.logError(eCode,eMsg,xpath3);
+					}
+				}
+        	
+			}
+			
+			
+        }
+}
+ catch(Exception e)
+	{ 
+		//System.out.println("Exception:FieldOFieldNotI"); 
+	}
+}
+
+function void DeliveryInfoIsMoreThan2(XOMContainerBean xcb, String section, String field, String eCode, String eMsg)
+{
+		try{
+		XOMAccessBean accessBean = xcb.xpath(section);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+        for(int i = 0; i < arr.length; i++)
+        {
+        	String xpath = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field).toString();
+        	
+			if((((new Populated()).isPopulated((xcb.xpath(xpath)).stringValue())) || (xcb.xpath(xpath).booleanValue())) 
+			&& ((new Equals()).isEquals(((xcb.xpath("/LSR_ORD_REQ/LSR/LSR_ADMIN/REQTYP")).stringValue()),"JB")) 
+			&& ((new Equals()).isEqualToValues((xcb.xpath("/LSR_ORD_REQ/LSR/LSR_ADMIN/ACT").stringValue()),"C,T")) )
+			//&& it is not true that_the value of "/LSR_ORD_REQ/DL/LISTING_INFO/listingcontrolsection/ddqty" is equal to number of occurance of "/LSR_ORD_REQ/DL/LISTING_INFO/dsrdeliveryinfo")
+        	{
+        		xcb.logError(eCode,eMsg,xpath);
+        	}
+        }
+}
+ catch(Exception e)
+	{  
+		//System.out.println("Exception:DeliveryInfoIsMoreThan2"); 
+	}
+}
+
+
+function void EachOccOfAliAreSame(XOMContainerBean xcb, String section, String field, String eCode, String eMsg)
+{
+ try
+ {
+  XOMAccessBean accessBean = xcb.xpath(section);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+  boolean flag=false;
+  String[] ali=new String[arr.length];
+     int count=0;
+     for(int i = 0; i < arr.length; i++)
+        {
+         String xpath1 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field).toString();
+   String xpath2 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append("LISTING_CNTRL/LACT").toString();
+         
+   if((((new Populated()).isPopulated((xcb.xpath(xpath1)).stringValue()))
+    && (new Equals()).isEqualToValues((xcb.xpath(xpath2).stringValue()),"N,D,Z") ))
+         {
+    String ali1=(xcb.xpath(xpath1)).stringValue();
+          ali[i]=ali1;
+          count++;
+         }
+        }
+     if(count>1)
+     {
+     for(int i=0;i<ali.length;i++)
+     {
+      if(ali[i]!=null)
+      {
+      for(int j=i+1;j<ali.length;j++)
+       if(ali[j]!=null)
+       {
+       if((ali[i].equalsIgnoreCase(ali[j])))
+        flag=true;
+       }
+      }   
+     }
+     
+  if(flag==true)
+  {
+   String p1="/LSR_ORD_REQ/DL/LISTING_INFO/LISTING_CNTRL/ALI";
+  xcb.logError(eCode,eMsg,p1);
+  }
+     }
+ }
+ catch(Exception e)
+ { 
+  //System.out.println("Exception:EachOccOfAliAreSame"); 
+ }
+}
+	
+	
+function void EachOccOfRTYAreLML(XOMContainerBean xcb, String section, String field, String eCode, String eMsg)
+{
+		try{
+		XOMAccessBean accessBean = xcb.xpath(section);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+        int count=0;
+        for(int i = 0; i < arr.length; i++)
+        {
+        	String xpath = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field).toString();
+        	String xpath2 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append("listingcontrolsection/lact").toString();
+			if(((new Populated()).isPopulated((xcb.xpath(xpath)).stringValue()))
+				&& ((new Equals()).isEquals(((xcb.xpath(xpath)).stringValue()),"LML")) 
+				&& ((new Equals()).isEqualToValues((xcb.xpath(xpath2).stringValue()),"N,D,Z")))
+        	{
+        		count++;
+        	}
+        }
+        if(count>1)
+        	xcb.logError(eCode,eMsg,"/LSR_ORD_REQ/DL/LISTING_INFO/LISTING_CNTRL/RTY");
+}
+ catch(Exception e)
+{ System.out.println("Exception:EachOccOfRTYAreLML");  }
+}
+
+function void FirstOccOfRTYIsNotLML(XOMContainerBean xcb, String section, String field, String eCode, String eMsg)
+{
+		try{
+		XOMAccessBean accessBean = xcb.xpath(section);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+        int count1=0;
+        int count2=0;
+        for(int i = 0; i < arr.length; i++)
+        {
+        	String xpath = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field).toString();
+        	
+        	if(i==0 && ((new Populated()).isPopulated((xcb.xpath(xpath)).stringValue()))
+				&& ((new Equals()).isNotEquals(((xcb.xpath(xpath)).stringValue()),"LML"))
+				&& ((new Equals()).isNotEquals(((xcb.xpath("/LSR_ORD_REQ/LSR/LSR_ADMIN/REQTYP")).stringValue()),"JB")) 
+				&& ((new Equals()).isNotEqualToValues((xcb.xpath("/LSR_ORD_REQ/LSR/LSR_ADMIN/ACT").stringValue()),"C,R")))
+        	{
+        		count1++;
+        	}
+        	
+			if(i>0 && ((new Populated()).isPopulated((xcb.xpath(xpath)).stringValue())
+				&& ((new Equals()).isNotEquals(((xcb.xpath("/LSR_ORD_REQ/LSR/LSR_ADMIN/REQTYP")).stringValue()),"JB")) 
+				&& ((new Equals()).isNotEqualToValues((xcb.xpath("/LSR_ORD_REQ/LSR/LSR_ADMIN/ACT").stringValue()),"C,R")))
+			)
+        	{
+        		count2++;
+        	}
+        }
+        
+        if( count1>0 && count2>0 )
+        	xcb.logError(eCode,eMsg,"/LSR_ORD_REQ/DL/LISTING_INFO/LISTING_CNTRL/RTY");
+        
+}
+ catch(Exception e)
+	{ 
+		//System.out.println("Exception:FirstOccOfRTYIsNotLML"); 
+	}
+}
+
+function void LactOandIWithRTY(XOMContainerBean xcb, String section, String field1, String field2, String field3, String eCode, String eMsg)
+{
+		try{
+			if((new Equals()).isEqualToValues((xcb.xpath("/LSR_ORD_REQ/LSR/LSR_ADMIN/ACT").stringValue()),"C,T"))
+        	{
+				XOMAccessBean accessBean = xcb.xpath(section);
+				XOMContainerBean arr[] = accessBean.nodeSet();
+				String[] ali_O=new String[(arr.length +1)];
+				String[] ali_I=new String[(arr.length +1)];
+				
+				for(int i = 1; i <= arr.length; i++)
+				{
+					String xpath1 = (new StringBuilder(String.valueOf(section))).append("[").append(i).append("]/").append(field1).toString();
+					String xpath2 = (new StringBuilder(String.valueOf(section))).append("[").append(i).append("]/").append(field2).toString();
+					String xpath3 = (new StringBuilder(String.valueOf(section))).append("[").append(i).append("]/").append(field3).toString();
+					if(((new Equals()).isEquals(((xcb.xpath(xpath1)).stringValue()),"O"))&& ((new Equals()).isEquals(((xcb.xpath(xpath2)).stringValue()),"LML")))
+					{
+						ali_O[i]=(xcb.xpath(xpath3)).stringValue();
+					}
+					else
+					{
+						ali_O[i]="x";
+					}
+				}
+				
+				for(int j = 1; j <= arr.length; j++)
+				{
+					String xpath1 = (new StringBuilder(String.valueOf(section))).append("[").append(j).append("]/").append(field1).toString();
+					String xpath2 = (new StringBuilder(String.valueOf(section))).append("[").append(j).append("]/").append(field2).toString();
+					String xpath3 = (new StringBuilder(String.valueOf(section))).append("[").append(j).append("]/").append(field3).toString();
+					if(((new Equals()).isEquals(((xcb.xpath(xpath1)).stringValue()),"I"))&& ((new Equals()).isEquals(((xcb.xpath(xpath2)).stringValue()),"LML")))
+					{
+						ali_I[j]=(xcb.xpath(xpath3)).stringValue();
+					}
+					else
+					{
+						ali_I[j]="x";
+					}
+				}
+				for(int a = 1; a <= arr.length; a++)
+				{
+					for(int b = 1; b <= arr.length; b++)
+					{
+						if(ali_O[a].equals(ali_I[b]))
+						{
+							ali_O[a]="x";
+							ali_I[b]="x";
+							b=arr.length;
+						}
+					}
+					
+				}
+				for(int k = 1; k <= arr.length; k++)
+				{
+					if(!(ali_O[k].equals("x")))
+					{
+						String xpath = (new StringBuilder(String.valueOf(section))).append("[").append(k).append("]/").append(field1).toString();
+						xcb.logError(eCode,eMsg,xpath);
+					}
+				}
+				
+			}
+			
+			
+	}
+ catch(Exception e)
+	{ 
+		//System.out.println("Exception:LactOandIWithRTY"); 
+	}
+}
+
+function void LactIandOWithRTY(XOMContainerBean xcb, String section, String field1, String field2, String field3, String eCode, String eMsg)
+{
+		try{
+			if((new Equals()).isEqualToValues((xcb.xpath("/LSR_ORD_REQ/LSR/LSR_ADMIN/ACT").stringValue()),"C,T"))
+        	{
+				XOMAccessBean accessBean = xcb.xpath(section);
+				XOMContainerBean arr[] = accessBean.nodeSet();
+				String[] ali_O=new String[(arr.length +1)];
+				String[] ali_I=new String[(arr.length +1)];
+				
+				for(int i = 1; i <= arr.length; i++)
+				{
+					String xpath1 = (new StringBuilder(String.valueOf(section))).append("[").append(i).append("]/").append(field1).toString();
+					String xpath2 = (new StringBuilder(String.valueOf(section))).append("[").append(i).append("]/").append(field2).toString();
+					String xpath3 = (new StringBuilder(String.valueOf(section))).append("[").append(i).append("]/").append(field3).toString();
+					if(((new Equals()).isEquals(((xcb.xpath(xpath1)).stringValue()),"I"))&& ((new Equals()).isEquals(((xcb.xpath(xpath2)).stringValue()),"LML")))
+					{
+						ali_O[i]=(xcb.xpath(xpath3)).stringValue();
+					}
+					else
+					{
+						ali_O[i]="x";
+					}
+				}
+				
+				for(int j = 1; j <= arr.length; j++)
+				{
+					String xpath1 = (new StringBuilder(String.valueOf(section))).append("[").append(j).append("]/").append(field1).toString();
+					String xpath2 = (new StringBuilder(String.valueOf(section))).append("[").append(j).append("]/").append(field2).toString();
+					String xpath3 = (new StringBuilder(String.valueOf(section))).append("[").append(j).append("]/").append(field3).toString();
+					if(((new Equals()).isEquals(((xcb.xpath(xpath1)).stringValue()),"O"))&& ((new Equals()).isEquals(((xcb.xpath(xpath2)).stringValue()),"LML")))
+					{
+						ali_I[j]=(xcb.xpath(xpath3)).stringValue();
+					}
+					else
+					{
+						ali_I[j]="x";
+					}
+				}
+				for(int a = 1; a <= arr.length; a++)
+				{
+					for(int b = 1; b <= arr.length; b++)
+					{
+						if(ali_O[a].equals(ali_I[b]))
+						{
+							ali_O[a]="x";
+							ali_I[b]="x";
+							b=arr.length;
+						}
+					}
+					
+				}
+				for(int k = 1; k <= arr.length; k++)
+				{
+					if(!(ali_O[k].equals("x")))
+					{
+						String xpath = (new StringBuilder(String.valueOf(section))).append("[").append(k).append("]/").append(field1).toString();
+						xcb.logError(eCode,eMsg,xpath);
+					}
+				}
+				
+			}
+			
+			
+	}
+ catch(Exception e)
+	{ 
+		//System.out.println("Exception:LactIandOWithRTY"); 
+	}
+}
+
+function void noofoccurencesofrtyequalslml(XOMContainerBean xcb, String section, String eCode, String eMsg)
+{
+		try{
+		XOMAccessBean accessBean = xcb.xpath(section);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+        int count=0;
+        if(((new Equals()).isEquals(((xcb.xpath("/LSR_ORD_REQ/LSR/LSR_ADMIN/REQTYP")).stringValue()),"JB"))
+        && ((new Equals()).isEquals(((xcb.xpath("/LSR_ORD_REQ/LSR/LSR_ADMIN/ACT")).stringValue()),"D")))
+        {
+        	for(int i = 0; i < arr.length; i++)
+        	{
+        		String xpath1 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append("LISTING_CNTRL/RTY").toString();
+				String xpath2 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append("LISTING_CNTRL/LACT").toString();
+        	
+				if(((new Equals()).isEquals(((xcb.xpath(xpath1)).stringValue()),"LML" )) && (((new Equals()).isEquals(((xcb.xpath(xpath2)).stringValue()),"D"))))
+        		{
+        			count=count+1;
+        		}
+			
+				if(count>1)
+				{
+					xcb.logError(eCode,eMsg,xpath1);
+					break;
+				}
+       		}
+       	}
+        
+}
+ catch(Exception e)
+{ 
+	//System.out.println("Exception:noofoccurencesofrtyequalslml");  
+}
+}
+
+function void LactOandIWithSameAli(XOMContainerBean xcb, String section, String field1, String field2, String field3, String eCode, String eMsg)
+{
+		try{
+				XOMAccessBean accessBean = xcb.xpath(section);
+				XOMContainerBean arr[] = accessBean.nodeSet();
+				String[] ali_O=new String[(arr.length +1)];
+				String[] ali_I=new String[(arr.length +1)];
+				
+				for(int i = 1; i <= arr.length; i++)
+				{
+					String xpath1 = (new StringBuilder(String.valueOf(section))).append("[").append(i).append("]/").append(field1).toString();
+					String xpath2 = (new StringBuilder(String.valueOf(section))).append("[").append(i).append("]/").append(field2).toString();
+					String xpath3 = (new StringBuilder(String.valueOf(section))).append("[").append(i).append("]/").append(field3).toString();
+					if(((new Equals()).isEquals(((xcb.xpath(xpath1)).stringValue()),"O"))&& ((new Equals()).isNotEquals(((xcb.xpath(xpath2)).stringValue()),"LML")))
+					{
+						ali_O[i]=(xcb.xpath(xpath3)).stringValue();
+					}
+					else
+					{
+						ali_O[i]="x";
+					}
+				}
+				
+				for(int j = 1; j <= arr.length; j++)
+				{
+					String xpath1 = (new StringBuilder(String.valueOf(section))).append("[").append(j).append("]/").append(field1).toString();
+					String xpath2 = (new StringBuilder(String.valueOf(section))).append("[").append(j).append("]/").append(field2).toString();
+					String xpath3 = (new StringBuilder(String.valueOf(section))).append("[").append(j).append("]/").append(field3).toString();
+					if(((new Equals()).isEquals(((xcb.xpath(xpath1)).stringValue()),"I"))&& ((new Equals()).isNotEquals(((xcb.xpath(xpath2)).stringValue()),"LML")))
+					{
+						ali_I[j]=(xcb.xpath(xpath3)).stringValue();
+					}
+					else
+					{
+						ali_I[j]="x";
+					}
+				}
+				for(int a = 1; a <= arr.length; a++)
+				{
+					for(int b = 1; b <= arr.length; b++)
+					{
+						if(ali_O[a].equals(ali_I[b]))
+						{
+							ali_O[a]="x";
+							ali_I[b]="x";
+							b=arr.length;
+						}
+					}
+					
+				}
+				for(int k = 1; k <= arr.length; k++)
+				{
+					if(!(ali_O[k].equals("x")))
+					{
+						String xpath = (new StringBuilder(String.valueOf(section))).append("[").append(k).append("]/").append(field1).toString();
+						xcb.logError(eCode,eMsg,xpath);
+					}
+				}
+				
+			}
+
+ catch(Exception e)
+	{ 
+		//System.out.println("Exception:LactOandIWithSameAli"); 
+	}
+}
+
+function void LactIandOWithSameAli(XOMContainerBean xcb, String section, String field1, String field2, String field3, String eCode, String eMsg)
+{
+		try{
+				XOMAccessBean accessBean = xcb.xpath(section);
+				XOMContainerBean arr[] = accessBean.nodeSet();
+				String[] ali_O=new String[(arr.length +1)];
+				String[] ali_I=new String[(arr.length +1)];
+				
+				for(int i = 1; i <= arr.length; i++)
+				{
+					String xpath1 = (new StringBuilder(String.valueOf(section))).append("[").append(i).append("]/").append(field1).toString();
+					String xpath2 = (new StringBuilder(String.valueOf(section))).append("[").append(i).append("]/").append(field2).toString();
+					String xpath3 = (new StringBuilder(String.valueOf(section))).append("[").append(i).append("]/").append(field3).toString();
+					if(((new Equals()).isEquals(((xcb.xpath(xpath1)).stringValue()),"I"))&& ((new Equals()).isNotEquals(((xcb.xpath(xpath2)).stringValue()),"LML")))
+					{
+						ali_O[i]=(xcb.xpath(xpath3)).stringValue();
+					}
+					else
+					{
+						ali_O[i]="x";
+					}
+				}
+				
+				for(int j = 1; j <= arr.length; j++)
+				{
+					String xpath1 = (new StringBuilder(String.valueOf(section))).append("[").append(j).append("]/").append(field1).toString();
+					String xpath2 = (new StringBuilder(String.valueOf(section))).append("[").append(j).append("]/").append(field2).toString();
+					String xpath3 = (new StringBuilder(String.valueOf(section))).append("[").append(j).append("]/").append(field3).toString();
+					if(((new Equals()).isEquals(((xcb.xpath(xpath1)).stringValue()),"O"))&& ((new Equals()).isNotEquals(((xcb.xpath(xpath2)).stringValue()),"LML")))
+					{
+						ali_I[j]=(xcb.xpath(xpath3)).stringValue();
+					}
+					else
+					{
+						ali_I[j]="x";
+					}
+				}
+				for(int a = 1; a <= arr.length; a++)
+				{
+					for(int b = 1; b <= arr.length; b++)
+					{
+						if(ali_O[a].equals(ali_I[b]))
+						{
+							ali_O[a]="x";
+							ali_I[b]="x";
+							b=arr.length;
+						}
+					}
+					
+				}
+				for(int k = 1; k <= arr.length; k++)
+				{
+					if(!(ali_O[k].equals("x")))
+					{
+						String xpath = (new StringBuilder(String.valueOf(section))).append("[").append(k).append("]/").append(field1).toString();
+						xcb.logError(eCode,eMsg,xpath);
+					}
+				}
+				
+			}
+
+ catch(Exception e)
+	{ 
+		//System.out.println("Exception:LactIandOWithSameAli"); 
+	}
+}
+
+function void SameAliWhenLactIandO(XOMContainerBean xcb, String section, String field1, String field2, String field3, String eCode, String eMsg)
+{
+		try{
+		XOMAccessBean accessBean = xcb.xpath(section);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+        int count1=0;
+        String[] ali1=new String[arr.length];
+        String[] ali2=new String[arr.length];
+        String[] path=new String[arr.length];
+		boolean[] flag=new boolean[arr.length];
+        
+        for(int i = 0; i < arr.length; i++)
+        {
+        	String xpath1 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field1).toString();
+			String xpath2 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field2).toString();
+        	String xpath3 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field3).toString();
+        	
+        	if(((new Populated()).isPopulated((xcb.xpath(xpath3)).stringValue()))
+				&& ((new Populated()).isPopulated((xcb.xpath(xpath2)).stringValue()))
+				&& ((new Equals()).isNotEquals(((xcb.xpath(xpath2)).stringValue()),"LML"))
+				&& ((new Equals()).isEquals(((xcb.xpath(xpath1)).stringValue()),"I")))
+        	{
+        		ali1[i]=(xcb.xpath(xpath3)).stringValue();
+        		path[i]=xpath3;
+        		count1++;
+        	}
+        }
+        if(count1>0)
+        {
+        	for(int i = 0; i < arr.length; i++)
+        	{
+        		String xpath1 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field1).toString();
+        		String xpath2 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field2).toString();
+        		String xpath3 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field3).toString();
+        	
+        		if(((new Populated()).isPopulated((xcb.xpath(xpath3)).stringValue())) 
+        				&& ((new Equals()).isEquals(((xcb.xpath(xpath1)).stringValue()),"O")))
+        		{	
+        			ali2[i]=(xcb.xpath(xpath3)).stringValue();
+        		}
+        	}
+        	
+        	for(int i=0;i<ali1.length;i++)
+        	{
+        		if(ali1[i]!=null)
+        		{
+        			for(int j=0;j<ali2.length;j++)
+        			{
+        				if(ali2[j]!=null)
+        				{
+        					if((ali1[i].equalsIgnoreCase(ali2[j])))
+        						flag[i]=true;
+        				}
+        			}
+        		}
+        	}
+        	for(int i=0;i<ali1.length;i++)
+        	{
+        		if(flag[i]!=true && ali1[i]!=null)
+        		{
+        		String xpath3=path[i];
+        		xcb.logError(eCode,eMsg,xpath3);
+        		}	
+        		
+        	}
+        	
+        }
+        
+}
+ catch(Exception e)
+{ 
+	//System.out.println("Exception:SameAliWhenLactIandO"); 
+}
+}
+
+
+
+
+function void SameRTYForEachLtnWithLact(XOMContainerBean xcb, String section, String field1, String field2, String field3, String eCode, String eMsg)
+{
+		try{
+		XOMAccessBean accessBean = xcb.xpath(section);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+        int count1=0;
+        int[] a= new int[arr.length];
+        String[] ltn1=new String[arr.length];
+        String[] path=new String[arr.length];
+        String[] ltn2=new String[arr.length];
+        boolean[] flag=new boolean[arr.length];
+        
+        for(int i = 0; i < arr.length; i++)
+        {
+        	String xpath1 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field1).toString();
+        	String xpath2 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field2).toString();
+        	String xpath3 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field3).toString();
+        	
+        	if(((new Populated()).isPopulated((xcb.xpath(xpath1)).stringValue()))
+				&& ((new Equals()).isEqualToValues(((xcb.xpath(xpath2)).stringValue()),"N"))
+				&& ((new Equals()).isEquals(((xcb.xpath(xpath3)).stringValue()),"LAM")))
+        	{
+        		a[count1]=i+1;
+        		ltn1[count1]=(xcb.xpath(xpath1)).stringValue();
+        		path[i]=xpath1;
+        		count1++;
+        	}
+        }
+        
+        
+        
+        if(count1>0)
+        {
+        	for(int i = 0; i < arr.length; i++)
+            {
+            	String xpath1 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field1).toString();
+            	String xpath2 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field2).toString();
+            	String xpath3 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field3).toString();
+            	
+            	if(((new Populated()).isPopulated((xcb.xpath(xpath1)).stringValue()))
+    				&& ((new Equals()).isEqualToValues(((xcb.xpath(xpath2)).stringValue()),"I,N,Z"))
+    				&& ((new Equals()).isEquals(((xcb.xpath(xpath3)).stringValue()),"LML")))
+            	{
+            		ltn2[i]=(xcb.xpath(xpath1)).stringValue();
+            		
+            	}
+            }
+        	
+        	for(int i=0;i<ltn1.length;i++)
+        	{
+        		if(ltn1[i]!=null)
+        		{
+        		for(int j=0;j<ltn2.length;j++)
+        		{
+        			if(ltn2[j]!=null)
+        			{
+        			if(ltn1[i].equalsIgnoreCase(ltn2[j]))
+        				flag[i]=true;
+        			}
+        		}
+        		}
+        	}
+        	for(int i=0;i<flag.length;i++)
+        	{
+        		String xpath1 = path[i];
+        		if(flag[i]==true)
+        		xcb.logError(eCode,eMsg,xpath1);
+        	}
+        	 	
+        }
+        
+}
+ catch(Exception e)
+{ 
+	//System.out.println("Exception:SameRTYForEachLtnWithLact"); 
+}
+}
+
+
+function void SameLactForEachLtn(XOMContainerBean xcb, String section, String field1, String field2, String field3, String eCode, String eMsg)
+{
+		try{
+		XOMAccessBean accessBean = xcb.xpath(section);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+        int count1=0;
+        String[] ltn1=new String[arr.length];
+        String[] ltn2=new String[arr.length];
+        int[] a= new int[arr.length];
+        boolean[] flag=new boolean[arr.length];
+        
+        for(int i = 0; i < arr.length; i++)
+        {
+        	String xpath1 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field1).toString();
+        	String xpath2 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field2).toString();
+        	String xpath3 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field3).toString();
+        	
+        	if(((new Populated()).isPopulated((xcb.xpath(xpath1)).stringValue()))
+				&& ((new Equals()).isEqualToValues(((xcb.xpath(xpath2)).stringValue()),"I,Z"))
+				&& ((new Equals()).isEquals(((xcb.xpath(xpath3)).stringValue()),"LAM")))
+        	{
+        		a[i]=i+1;
+        		ltn1[i]=(xcb.xpath(xpath1)).stringValue();
+        		count1++;
+        	}
+        }
+        
+        if(count1>0)
+        {
+        	for(int i = 0; i < arr.length; i++)
+        	{
+        		String xpath1 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field1).toString();
+        		String xpath2 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field2).toString();
+        		String xpath3 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field3).toString();
+        	
+        		if(((new Populated()).isPopulated((xcb.xpath(xpath1)).stringValue()))
+					&& ((new Equals()).isEqualToValues(((xcb.xpath(xpath2)).stringValue()),"I,Z"))
+					&& ((new Equals()).isEquals(((xcb.xpath(xpath3)).stringValue()),"LML")))
+        		{
+        					ltn2[i]=(xcb.xpath(xpath1)).stringValue();
+        		}
+        	}
+        	for(int i=0;i<ltn1.length;i++)
+        	{
+        		if(ltn1[i]!=null)
+        		{
+        		for(int j=0;j<ltn2.length;j++)
+        		{
+        			if(ltn2[j]!=null)
+        			{
+        			if(ltn1[i].equalsIgnoreCase(ltn2[j]))
+        				flag[i]=true;
+        			}
+        		}
+        		}
+        	}
+        	for(int i=0;i<flag.length;i++)
+        	{
+        		String xpath1 = (new StringBuilder(String.valueOf(section))).append("[").append(a[i]).append("]/").append(field1).toString();
+        		if(flag[i]==true)
+        		xcb.logError(eCode,eMsg,xpath1);
+        	}
+        	 
+        }
+       
+}
+ catch(Exception e)
+{ 
+	//System.out.println("Exception:SameLactForEachLtn"); 
+}
+}
+
+function void LtnAndCkrAreNotSame(XOMContainerBean xcb, String section1, String section2, String field1, String field2, String eCode, String eMsg)
+{
+  try{
+  XOMAccessBean accessBean1 = xcb.xpath(section1);
+        XOMContainerBean arr1[] = accessBean1.nodeSet();
+        int count1=0;
+        boolean[] flag=new boolean[arr1.length];
+        String[] ltn=new String[arr1.length];
+        
+        for(int i = 0; i < arr1.length; i++)
+        {
+         String xpath1 = (new StringBuilder(String.valueOf(section1))).append("[").append(i + 1).append("]/").append(field1).toString();
+         if(((new Populated()).isPopulated((xcb.xpath(xpath1)).stringValue()))
+           && ((new Equals()).isEquals(((xcb.xpath("/LSR_ORD_REQ/LSR/LSR_ADMIN/REQTYP")).stringValue()),"AB")))
+         {
+         ltn[i]=(xcb.xpath(xpath1)).stringValue(); 
+         count1++;
+         }
+        }
+        
+        if(count1>0)
+        {
+  XOMAccessBean accessBean2 = xcb.xpath(section2);
+        XOMContainerBean arr2[] = accessBean2.nodeSet();
+        String[] ckr=new String[arr2.length];
+        
+        int count2=0;
+        
+         for(int i = 0; i < arr2.length; i++)
+         {
+          
+          String xpath2 = (new StringBuilder(String.valueOf(section2))).append("[").append(i + 1).append("]/").append(field2).toString();
+          
+          if(((new Populated()).isPopulated((xcb.xpath(xpath2)).stringValue())))
+          {
+            ckr[i]=(xcb.xpath(xpath2)).stringValue();
+            count2++;
+          }
+          
+         }
+         
+        if(count2>0)
+        {
+         for(int i=0;i<ltn.length;i++)
+         {
+          if(ltn[i]!=null)
+          {
+           for(int j=0;j<ckr.length;j++)
+           {
+            if(ckr[j]!=null)
+            {
+             if((ltn[i].equalsIgnoreCase(ckr[j])))
+               flag[i]=true;
+            }
+           }
+          }
+         }
+         for(int i=0;i<ltn.length;i++)
+         {
+          if(ltn[i]!=null)
+          {
+           if(flag[i]==false)
+           {
+            String xpath1 = (new StringBuilder(String.valueOf(section1))).append("[").append(i + 1).append("]/").append(field1).toString();
+            xcb.logError(eCode,eMsg,xpath1);
+           }
+          }
+         }
+        }
+         
+      
+        }
+        
+       
+  }catch(Exception e)
+  { 
+	//System.out.println("Exception:LtnAndCkrAreNotSame\n"+e); 
+  }
+}
+
+
+function void SingleLocationSec(XOMContainerBean xcb, String section, String eCode, String eMsg)
+{
+		try{
+		XOMAccessBean accessBean = xcb.xpath(section);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+        int count=0;
+        if(((new Equals()).isEquals(((xcb.xpath("/LSR_ORD_REQ/LSR/LSR_ADMIN/REQTYP")).stringValue()),"JB")) 
+			&& ((new Equals()).isEqualToValues((xcb.xpath("/LSR_ORD_REQ/LSR/LSR_ADMIN/ACT").stringValue()),"N,W,D")))
+        {
+        	for(int i = 0; i < arr.length; i++)
+        	{
+        		count++;
+        	}
+        	if(count>1)
+        	{
+        		xcb.logError(eCode,eMsg,"/LSR_ORD_REQ/EU/LOC_ACCESS[2]");
+        		
+        	}
+        }
+       	
+}
+ catch(Exception e)
+{ 
+	//System.out.println("Exception:SingleLocationSec"); 
+}
+}
+
+function void MaxTwoLocationSec(XOMContainerBean xcb, String section, String eCode, String eMsg)
+{
+		try{
+		XOMAccessBean accessBean = xcb.xpath(section);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+        int count=0;
+        if(((new Equals()).isEquals(((xcb.xpath("/LSR_ORD_REQ/LSR/LSR_ADMIN/REQTYP")).stringValue()),"JB")) 
+			&& ((new Equals()).isEqualToValues((xcb.xpath("/LSR_ORD_REQ/LSR/LSR_ADMIN/ACT").stringValue()),"C,T")))
+        {
+        	for(int i = 0; i < arr.length; i++)
+        	{
+        		count++;
+        	}
+        	if(count>2)
+        	{
+        		xcb.logError(eCode,eMsg,"/LSR_ORD_REQ/EU/LOC_ACCESS[3]");
+        		
+        	}
+        }
+       	
+}
+ catch(Exception e)
+{  
+	//System.out.println("Exception:MaxTwoLocationSec"); 
+}
+}
+
+function void MaxTwoLocationSecWithTos(XOMContainerBean xcb, String section, String eCode, String eMsg)
+{
+		try{
+		XOMAccessBean accessBean = xcb.xpath(section);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+        int count=0;
+        if((new Position()).positionOftagValueEqualToValue(2, ((xcb.xpath("/LSR_ORD_REQ/LSR/LSR_ADMIN/AUTHORIZATION/TOS").stringValue())), "O") 
+			&& ((new Equals()).isEqualToValues((xcb.xpath("/LSR_ORD_REQ/LSR/LSR_ADMIN/ACT").stringValue()),"N,C,D,M")))
+        {
+        	for(int i = 0; i < arr.length; i++)
+        	{
+        		count++;
+        	}
+        	if(count>2)
+        	{
+        		xcb.logError(eCode,eMsg,"/LSR_ORD_REQ/EU/LOC_ACCESS[3]");
+        		
+        	}
+        }
+       
+}
+ catch(Exception e)
+{ 
+	//System.out.println("Exception:MaxTwoLocationSecWithTos"); 
+}
+}
+
+function void PotssplitProhibited(XOMContainerBean xcb, String section, String eCode, String eMsg)
+{
+		try{
+		XOMAccessBean accessBean = xcb.xpath(section);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+        if((new Position()).positionOftagValueEqualToValues(2,(xcb.xpath("/LSR_ORD_REQ/LSR/LSR_ADMIN/AUTHORIZATION/TOS").stringValue()),"N,R,S"))
+        {
+        	for(int i = 0; i < arr.length; i++)
+        	{
+        		String xpath1 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append("POTSSPLIT").toString();
+        		String xpath2 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append("CABLE_CONN_GRP/CABCONN").toString();
+        		String xpath3 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append("CABLE_CONN_GRP/CABCONNTYP").toString();
+        			
+        		if(((new Populated()).isPopulated((xcb.xpath(xpath1)).stringValue()))
+        			&& (((new Populated()).isPopulated((xcb.xpath(xpath2)).stringValue()))
+        				|| ((new Populated()).isPopulated((xcb.xpath(xpath3)).stringValue()))))
+        		{
+        				xcb.logError(eCode,eMsg,xpath1);
+        		
+        		}
+        	}
+        }
+       	
+}
+ catch(Exception e)
+{  
+	//System.out.println("Exception:PotssplitProhibited"); 
+}
+}
+
+
+function void FieldShouldNotUnique(XOMContainerBean xcb, String section, String field, String eCode, String eMsg)
+{
+		try{
+		XOMAccessBean accessBean = xcb.xpath(section);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+        for(int i = 0; i < arr.length; i++)
+        	{
+        		for(int j = i+1; j < arr.length; j++)
+        		{
+        			String xpath1 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field).toString();
+        			String xpath2 = (new StringBuilder(String.valueOf(section))).append("[").append(j + 1).append("]/").append(field).toString();
+        			String str1=(xcb.xpath(xpath1).stringValue());
+        			String str2=(xcb.xpath(xpath2).stringValue());
+        			if(((str1.equals(str2))) && ((new Populated()).isPopulated((xcb.xpath(xpath1)).stringValue()))
+        			&& ((new Populated()).isPopulated((xcb.xpath(xpath2)).stringValue())))
+        			{
+        				xcb.logError(eCode,eMsg,xpath1);
+        				break;
+        			}
+        		}
+        	}
+       	
+}
+ catch(Exception e)
+{ 
+	//System.out.println("Exception:FieldShouldNotUnique"); 
+}
+}
+
+
+function void FieldValInSequence(XOMContainerBean xcb, String section, String field, String iniVal, String eCode, String eMsg)
+{
+		try{
+		XOMAccessBean accessBean = xcb.xpath(section);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+        int locnum=0;
+        int count=Integer.parseInt(iniVal);
+		String val=null;
+        for(int i = 0; i < arr.length; i++)
+        {
+        	String xpath = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field).toString();
+			String xpath1 = (new StringBuilder(String.valueOf(section))).append("[1]/").append(field).toString();
+			locnum=Integer.parseInt((xcb.xpath(xpath)).stringValue());
+			val=((xcb.xpath(xpath1)).stringValue());
+			//System.out.println("locnum:"+locnum+"\nval:"+val);
+        	if(locnum != count || !(val.equals(iniVal)))
+        	{
+        		xcb.logError(eCode,eMsg,xpath);
+				break;
+        		
+        	}
+			count=count+1;
+        }
+        
+}
+ catch(Exception e)
+{ 
+	//System.out.println("Exception:FieldValInSequence"); 
+}
+}
+
+function void FieldOccNotMoreThanCount(XOMContainerBean xcb, String section, String subsec, String field, String value, String eCode, String eMsg)
+{
+		try{
+		XOMAccessBean accessBean1 = xcb.xpath(section);
+        XOMContainerBean arr1[] = accessBean1.nodeSet();
+        int val=Integer.parseInt(value);
+        int count=0;
+        for(int i = 0; i < arr1.length; i++)
+        {	
+        	String xpath1 = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(subsec).toString();
+        	
+			XOMAccessBean accessBean2 = xcb.xpath(xpath1);
+        	XOMContainerBean arr2[] = accessBean2.nodeSet();
+        	for(int j = 0; j < arr2.length; j++)
+        	{
+        			
+        			String xpath2 = (new StringBuilder(String.valueOf(xpath1))).append("[").append(j + 1).append("]/").append(field).toString();
+        			
+        			if(((new Populated()).isPopulated((xcb.xpath(xpath2)).stringValue())))
+        			{
+        				count++;
+        			}
+        	}
+        	if(count>4)
+        	{
+        		xcb.logError(eCode,eMsg,xpath1+"/"+field);
+        	}
+        }
+       	
+}
+ catch(Exception e)
+{ 
+	//System.out.println("Exception:FieldOccNotMoreThanCount");  
+}
+}
+
+function void ScaWithLnaNotEqualT(XOMContainerBean xcb, String section, String field, String eCode, String eMsg)
+{
+		try{
+		if(((new Populated()).isPopulated((xcb.xpath(field)).stringValue()))
+			&& ((new Equals()).isEquals(((xcb.xpath("/LSR_ORD_REQ/LSR/LSR_ADMIN/REQTYP")).stringValue()),"AB"))
+			&& ((new Position()).positionOftagValueEqualToValues(2,(xcb.xpath("/LSR_ORD_REQ/LSR/LSR_ADMIN/AUTHORIZATION/TOS").stringValue()),"N,R,S"))
+			&& ((new Equals()).isEquals(((xcb.xpath("/LSR_ORD_REQ/LSR/LSR_ADMIN/ACT")).stringValue()),"C")))
+		{
+			
+		XOMAccessBean accessBean = xcb.xpath(section);
+        	XOMContainerBean arr[] = accessBean.nodeSet();
+        	for(int i = 0; i < arr.length; i++)
+        	{	
+        		String xpath = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append("lna").toString();
+        		
+        		if(((new Equals()).isEquals(((xcb.xpath(xpath)).stringValue()),"T")))
+        		{
+        			xcb.logError(eCode,eMsg,field);
+        			break;
+        		}
+        	}
+        }
+       	
+}
+ catch(Exception e)
+{ 
+	//System.out.println("Exception:ScaWithLnaNotEqualT"); 
+}
+}
+
+function boolean NumOccOfSecNotEqualFieldValue(XOMContainerBean xcb, String field1, String field2, String section)
+{
+		try{
+		XOMAccessBean accessBean = xcb.xpath(section);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+        String val=(xcb.xpath(field1)).stringValue();
+        int occ=Integer.parseInt(val);
+        int count=0;
+        if(field2 != "")
+        {
+        	for(int i = 0; i < arr.length; i++)
+        	{
+        		String xpath = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field2).toString();
+        		if((new Populated()).isPopulated((xcb.xpath(xpath)).stringValue()))
+				{	
+					count=count+1;
+				}
+        	}
+        }
+        else
+        {
+        	for(int i = 0; i < arr.length; i++)
+        	{
+        		String xpath = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]").toString();
+        		if((new Populated()).isPopulated((xcb.xpath(xpath)).stringValue()))
+				{	
+					count=count+1;
+				}
+        	}	
+        }
+		if(occ != count )
+        {
+        	return true;
+        }
+     return false;
+}
+ catch(Exception e)
+{ return false; }
+}
+
+function boolean AllOccOfFieldNotPop(XOMContainerBean xcb, String field, String section)
+{
+		try{
+		XOMAccessBean accessBean = xcb.xpath(section);
+        XOMContainerBean arr[] = accessBean.nodeSet();
+        int count=0;
+        for(int i = 0; i < arr.length; i++)
+        {
+        	String xpath = (new StringBuilder(String.valueOf(section))).append("[").append(i + 1).append("]/").append(field).toString();
+        	if((new Populated()).isPopulated((xcb.xpath(xpath)).stringValue()))
+			{	
+					count=count+1;
+			}
+        }
+        if(count != arr.length)
+        {
+        	return true;
+        }
+     return false;
+}
+ catch(Exception e)
+{ return false; }
+}
+
+
+ 
+//@@@@@@@@@@@@@@@@@ Form-level rules @@@@@@@@@@@@@@@@@@@@//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//@@@@@@@@@@@@@@@@@@@ Section-Form Rules @@@@@@@@@@@@@@@@@@@//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//@@@@@@@@@@@@@@@@@@@@@@@ EU-Form Rules @@@@@@@@@@@@@@@@@@@@@@@//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//@@@@@@@@@@@@@@@@@@@@@@@ LS-Form Rules @@@@@@@@@@@@@@@@@@@@@@@//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//@@@@@@@@@@@@@@@@@@@@@@@ LSNP-Form Rules @@@@@@@@@@@@@@@@@@@@@@@//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//@@@@@@@@@@@@@@@@@@@@@ NP-Form Rules @@@@@@@@@@@@@@@@@@@@@//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//@@@@@@@@@@@@@@@@@@@ RPL-Form Rules @@@@@@@@@@@@@@@@@@@//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//@@@@@@@@@@@@@@@@@@@ DL-Form Rules @@@@@@@@@@@@@@@@@@@//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//@@@@@@@@@@@@@@@@@@@ PS-Form Rules @@@@@@@@@@@@@@@@@@@//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//@@@@@@@@@@@@@@@@@@@ HGI-Form Rules @@@@@@@@@@@@@@@@@@@//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

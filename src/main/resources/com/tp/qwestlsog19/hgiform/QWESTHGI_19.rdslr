@@ -1,0 +1,58 @@
+package com.tp.qwestlsog19.hgiform;
+import java.util.*;
+import com.synchronoss.ruleserver.core.xpath.XOMContainerBean;
+import com.synchronoss.ruleserver.core.xpath.XOMAccessBean;
+import com.synchronoss.brms.dresclasses.xpath.XPathProcessor;
+import com.synchronoss.brms.dresclasses.xpath.Occurence;
+import com.synchronoss.brms.dresclasses.Populated;
+import com.synchronoss.brms.dresclasses.Equals;
+import com.synchronoss.brms.dresclasses.Contains;
+import com.synchronoss.brms.dresclasses.DatatypeCheck;
+import com.synchronoss.brms.dresclasses.SpaceCheck;
+import com.synchronoss.brms.dresclasses.LengthCheck;
+import com.synchronoss.brms.dresclasses.Position;
+import com.synchronoss.brms.dresclasses.TNFormat;
+import com.synchronoss.brms.dresclasses.RangeOfValues;
+import com.synchronoss.brms.dresclasses.DateCheck;
+import com.synchronoss.brms.dresclasses.Prohibited;
+import com.synchronoss.brms.dresclasses.DateFormatCheck;
+import com.synchronoss.brms.dresclasses.Required;
+import com.synchronoss.brms.dresclasses.CapitalLetterCheck;
+import com.synchronoss.brms.dresclasses.TimeFormatCheck;
+import com.synchronoss.brms.dresclasses.SpecialFormat;
+import com.synchronoss.brms.dresclasses.dao.SupplementOrderCheck;
+import com.synchronoss.brms.dresclasses.dao.HolidayCheck;
+
+rule "QWESTHGI_19" dialect "mvel" ruleflow-group "HGIFORM"
+
+when
+		xcb object
+		Evaluate 
+Start Brace
+ the field_tag "/LSR_ORD_REQ/HGI" is exists
+		
+AND
+ Rule "QWESTHGI_19" multiple times "HTN" in "/LSR_ORD_REQ/HGI/HUNT_GROUP_ID[i]/HUNT_DET[i]" is populated
+		
+AND
+ 
+Start Brace
+Rule "QWESTHGI_19" multiple times "HTN" in "/LSR_ORD_REQ/HGI/HUNT_GROUP_ID[i]/HUNT_DET[i]" maximum length value "17"
+		
+OR
+ 
+Start Brace
+Rule "QWESTHGI_19" multiple times "HTN" in "/LSR_ORD_REQ/HGI/HUNT_GROUP_ID[i]/HUNT_DET[i]" is AlphaNumeric_without following Special Character set "-, "
+        
+AND
+ it is not true that_Rule "QWESTHGI_19" multiple times "HTN" in "/LSR_ORD_REQ/HGI/HUNT_GROUP_ID[i]/HUNT_DET[i]" is AlphaNumeric
+End Brace
+
+End Brace
+
+End Brace
+
+		 
+	then
+		 the rule "QWESTHGI_19" with error code "QWESTHGI019" with message "HTN VALID VALUE = 1-17 ALPHA, NUMERIC, HYPHEN, COMMA, SPACE" for the field "htn" of section "/lsr_ord_req/hgi/hunt_group_id[i]/hunt_det[i]"
+end

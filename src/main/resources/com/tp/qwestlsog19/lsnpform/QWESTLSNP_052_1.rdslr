@@ -1,0 +1,43 @@
+package com.tp.qwestlsog19.lsnpform;
+import java.util.*;
+import com.synchronoss.ruleserver.core.xpath.XOMContainerBean;
+import com.synchronoss.ruleserver.core.xpath.XOMAccessBean;
+import com.synchronoss.brms.dresclasses.xpath.XPathProcessor;
+import com.synchronoss.brms.dresclasses.xpath.Occurence;
+import com.synchronoss.brms.dresclasses.Populated;
+import com.synchronoss.brms.dresclasses.Equals;
+import com.synchronoss.brms.dresclasses.Contains;
+import com.synchronoss.brms.dresclasses.DatatypeCheck;
+import com.synchronoss.brms.dresclasses.SpaceCheck;
+import com.synchronoss.brms.dresclasses.LengthCheck;
+import com.synchronoss.brms.dresclasses.Position;
+import com.synchronoss.brms.dresclasses.TNFormat;
+import com.synchronoss.brms.dresclasses.RangeOfValues;
+import com.synchronoss.brms.dresclasses.DateCheck;
+import com.synchronoss.brms.dresclasses.Prohibited;
+import com.synchronoss.brms.dresclasses.DateFormatCheck;
+import com.synchronoss.brms.dresclasses.Required;
+import com.synchronoss.brms.dresclasses.CapitalLetterCheck;
+import com.synchronoss.brms.dresclasses.TimeFormatCheck;
+import com.synchronoss.brms.dresclasses.SpecialFormat;
+import com.synchronoss.brms.dresclasses.dao.SupplementOrderCheck;
+import com.synchronoss.brms.dresclasses.dao.HolidayCheck;
+
+rule "QWESTLSNP_052_1" dialect "mvel" ruleflow-group "LSNPFORM"
+
+when
+		xcb object
+ 	 Evaluate 
+Start Brace
+ the field_tag "/LSR_ORD_REQ/LSNP" is exists
+		 
+AND
+ Rule "QWESTLSNP_052_1" multiple times "SVC_INFO/TRANSFER_OF_CALLS_SEC_GRP[i]/TC_TO_SEC" in "/LSR_ORD_REQ/LSNP/LSNP_SVC_DET[i]" is_not populated
+        
+AND
+ Rule "QWESTLSNP_052_1" multiple times "SVC_INFO/TRANSFER_OF_CALLS_GRP/TC_OPT" in "/LSR_ORD_REQ/LSNP/LSNP_SVC_DET[i]" is equal to "T"
+End Brace
+
+ 	 then
+ 	 	 the rule "QWESTLSNP_052_1" with error code "QWESTLSNP076" with message "TC TO SEC IS REQUIRED WHEN TC OPT = T" for the field "svc_info/transfer_of_calls_sec_grp[i]/tc_to_sec"  of section "/lsr_ord_req/lsnp/lsnp_svc_det[i]"
+end

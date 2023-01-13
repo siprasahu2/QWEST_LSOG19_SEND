@@ -1,0 +1,43 @@
+package com.tp.qwestlsog19.rplform;
+import java.util.*;
+import com.synchronoss.ruleserver.core.xpath.XOMContainerBean;
+import com.synchronoss.ruleserver.core.xpath.XOMAccessBean;
+import com.synchronoss.brms.dresclasses.xpath.XPathProcessor;
+import com.synchronoss.brms.dresclasses.xpath.Occurence;
+import com.synchronoss.brms.dresclasses.Populated;
+import com.synchronoss.brms.dresclasses.Equals;
+import com.synchronoss.brms.dresclasses.Contains;
+import com.synchronoss.brms.dresclasses.DatatypeCheck;
+import com.synchronoss.brms.dresclasses.SpaceCheck;
+import com.synchronoss.brms.dresclasses.LengthCheck;
+import com.synchronoss.brms.dresclasses.Position;
+import com.synchronoss.brms.dresclasses.TNFormat;
+import com.synchronoss.brms.dresclasses.RangeOfValues;
+import com.synchronoss.brms.dresclasses.DateCheck;
+import com.synchronoss.brms.dresclasses.Prohibited;
+import com.synchronoss.brms.dresclasses.DateFormatCheck;
+import com.synchronoss.brms.dresclasses.Required;
+import com.synchronoss.brms.dresclasses.CapitalLetterCheck;
+import com.synchronoss.brms.dresclasses.TimeFormatCheck;
+import com.synchronoss.brms.dresclasses.SpecialFormat;
+import com.synchronoss.brms.dresclasses.dao.SupplementOrderCheck;
+import com.synchronoss.brms.dresclasses.dao.HolidayCheck;
+
+rule "QWESTRPL_058_2" dialect "mvel" ruleflow-group "RPLFORM"
+
+when
+		xcb object
+ 	 Evaluate 
+Start Brace
+ the field_tag "/LSR_ORD_REQ/RPL" is exists
+		 
+AND
+ Rule "QWESTRPL_058_2" multiple times "SVC_ADDR_GRP/LD2" in "/LSR_ORD_REQ/RPL/PRIMARY_LOC/SECONDARY_LOC[i]" is_not populated
+        
+AND
+ Rule "QWESTRPL_058_2" multiple times "SVC_ADDR_GRP/LV2" in "/LSR_ORD_REQ/RPL/PRIMARY_LOC/SECONDARY_LOC[i]" is populated
+End Brace
+
+ 	 then
+ 	 	 the rule "QWESTRPL_058_2" with error code "QWESTRPL108" with message "LD2 (SECLOC) IS REQUIRED WHEN LV2 (SECLOC) IS POPULATED" for the field "svc_addr_grp/ld2" of section "/lsr_ord_req/rpl/primary_loc/secondary_loc[i]"
+end

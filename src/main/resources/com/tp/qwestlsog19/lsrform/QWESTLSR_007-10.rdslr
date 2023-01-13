@@ -1,0 +1,125 @@
+package com.tp.qwestlsog19.lsrform;
+import java.util.*;
+import com.synchronoss.ruleserver.core.xpath.XOMContainerBean;
+import com.synchronoss.ruleserver.core.xpath.XOMAccessBean;
+import com.synchronoss.brms.dresclasses.xpath.XPathProcessor;
+import com.synchronoss.brms.dresclasses.xpath.Occurence;
+import com.synchronoss.brms.dresclasses.Populated;
+import com.synchronoss.brms.dresclasses.Equals;
+import com.synchronoss.brms.dresclasses.Contains;
+import com.synchronoss.brms.dresclasses.DatatypeCheck;
+import com.synchronoss.brms.dresclasses.SpaceCheck;
+import com.synchronoss.brms.dresclasses.LengthCheck;
+import com.synchronoss.brms.dresclasses.Position;
+import com.synchronoss.brms.dresclasses.TNFormat;
+import com.synchronoss.brms.dresclasses.RangeOfValues;
+import com.synchronoss.brms.dresclasses.DateCheck;
+import com.synchronoss.brms.dresclasses.Prohibited;
+import com.synchronoss.brms.dresclasses.DateFormatCheck;
+import com.synchronoss.brms.dresclasses.Required;
+import com.synchronoss.brms.dresclasses.CapitalLetterCheck;
+import com.synchronoss.brms.dresclasses.TimeFormatCheck;
+import com.synchronoss.brms.dresclasses.SpecialFormat;
+import com.synchronoss.brms.dresclasses.dao.SupplementOrderCheck;
+import com.synchronoss.brms.dresclasses.dao.HolidayCheck;
+
+rule "QWESTLSR_007-10" dialect "mvel" ruleflow-group "LSRFORM"
+
+when
+		xcb object
+ 	 Evaluate 
+Start Brace
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is populated
+        
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is Numeric_with Special Characters Set "-"
+        
+AND
+ 
+Start Brace
+
+Start Brace
+ the length of "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is 12
+                        
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is compared with its position 1 to 3 with values "000"
+                        
+AND
+ the 4 position of "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is equal to "-"
+                        
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is compared with its position 5 to 7 with values "000"
+                        
+AND
+ the 8 position of "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is equal to "-"
+                        
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is compared with its position 9 to 12 with values "0000" 
+End Brace
+
+                
+OR
+ 
+Start Brace
+ the length of "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is 16
+                        
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is compared with its position 1 to 3 with values "000"
+                        
+AND
+ the 4 position of "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is equal to "-"
+                        
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is compared with its position 5 to 7 with values "000"
+                        
+AND
+ the 8 position of "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is equal to "-"
+                        
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is compared with its position 9 to 12 with values "0000"
+                        
+AND
+ the 13 position of "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is equal to "-"
+                        
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is compared with its position 14 to 16 with values "000" 
+End Brace
+
+                
+OR
+ 
+Start Brace
+ the length of "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is 16
+                        
+AND
+ the 4 position of "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is equal to "-"
+                        
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is compared with its position 5 to 7 with values "000"
+                        
+AND
+ the 8 position of "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is equal to "-"
+                        
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is compared with its position 9 to 12 with values "0000"
+                        
+AND
+ the 13 position of "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is equal to "-"
+                        
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/AN" is compared with its position 14 to 16 with values "000" 
+End Brace
+ 
+End Brace
+
+        
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/ACT" is not equal to values "N,V"
+        
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/REQTYP" equals "AB"
+End Brace
+
+ 	 then
+ 	 	 the error code "QWESTLSR029" with message "PLACEHOLDER MAY NOT BE USED FOR AN IF ACT IS NOT N OR V"  for the field "/lsr_ord_req/lsr/lsr_admin/an"
+end

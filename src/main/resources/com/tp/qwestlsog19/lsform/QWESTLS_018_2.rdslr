@@ -1,0 +1,46 @@
+package com.tp.qwestlsog19.lsform;
+import java.util.*;
+import com.synchronoss.ruleserver.core.xpath.XOMContainerBean;
+import com.synchronoss.ruleserver.core.xpath.XOMAccessBean;
+import com.synchronoss.brms.dresclasses.xpath.XPathProcessor;
+import com.synchronoss.brms.dresclasses.xpath.Occurence;
+import com.synchronoss.brms.dresclasses.Populated;
+import com.synchronoss.brms.dresclasses.Equals;
+import com.synchronoss.brms.dresclasses.Contains;
+import com.synchronoss.brms.dresclasses.DatatypeCheck;
+import com.synchronoss.brms.dresclasses.SpaceCheck;
+import com.synchronoss.brms.dresclasses.LengthCheck;
+import com.synchronoss.brms.dresclasses.Position;
+import com.synchronoss.brms.dresclasses.TNFormat;
+import com.synchronoss.brms.dresclasses.RangeOfValues;
+import com.synchronoss.brms.dresclasses.DateCheck;
+import com.synchronoss.brms.dresclasses.Prohibited;
+import com.synchronoss.brms.dresclasses.DateFormatCheck;
+import com.synchronoss.brms.dresclasses.Required;
+import com.synchronoss.brms.dresclasses.CapitalLetterCheck;
+import com.synchronoss.brms.dresclasses.TimeFormatCheck;
+import com.synchronoss.brms.dresclasses.SpecialFormat;
+import com.synchronoss.brms.dresclasses.dao.SupplementOrderCheck;
+import com.synchronoss.brms.dresclasses.dao.HolidayCheck;
+
+rule "QWESTLS_018_2" dialect "mvel" ruleflow-group "LSFORM"
+
+when
+		xcb object
+ 	 Evaluate 
+Start Brace
+ the field_tag "/LSR_ORD_REQ/LS" is exists
+		 
+AND
+ Rule "QWESTLS_018_2" multiple times "CFA" in "/LSR_ORD_REQ/LS/LS_SVC_DET[i]" is_not populated
+        
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/ACT" is equal to values "N,V"
+        
+AND
+ the "/LSR_ORD_REQ/LSR/LSR_ADMIN/AUTHORIZATION/APOT" is not populated
+End Brace
+
+ 	 then
+ 	 	 the rule "QWESTLS_018_2" with error code "QWESTLS095" with message "CFA IS REQUIRED WHEN ACT = N, V AND APOT IS NOT POPULATED" for the field "cfa" of section "/lsr_ord_req/ls/ls_svc_det[i]"
+end
